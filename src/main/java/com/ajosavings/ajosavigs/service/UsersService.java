@@ -1,7 +1,9 @@
 package com.ajosavings.ajosavigs.service;
 
-import com.ajosavings.ajosavigs.dto.PasswordDTO;
-import com.ajosavings.ajosavigs.dto.SignUpRequest;
+import com.ajosavings.ajosavigs.dto.request.LoginRequest;
+import com.ajosavings.ajosavigs.dto.request.PasswordDTO;
+import com.ajosavings.ajosavigs.dto.request.SignUpRequest;
+import com.ajosavings.ajosavigs.dto.response.AuthenticationResponse;
 import com.ajosavings.ajosavigs.exception.ResourceNotFoundException;
 import com.ajosavings.ajosavigs.models.PasswordToken;
 import com.ajosavings.ajosavigs.models.Users;
@@ -20,5 +22,9 @@ public interface UsersService {
 
     @Transactional
     ResponseEntity<String> resetPassword(String token, PasswordDTO passwordDTO) throws ResourceNotFoundException;
+
+    ResponseEntity<AuthenticationResponse> loginRegisteredUser(LoginRequest request);
+
+    void logout();
 }
 
