@@ -26,10 +26,9 @@ public class EmailServiceImpl implements EmailService {
     public static final String HTML_CONTEXT = "<p>Dear user, you have requested to reset your password.</p>\n" +
             "\n" +
             "<!-- Display the verification token within the email content -->\n" +
-            "<p>Please click <a th:href=\"'https://linkedin.com' + ${passwordToken}\">here</a> to reset your password</p>\n" +
+            "<p>Please click <a th:href='https://localhost:3000/forgotpassword' + ${passwordToken}>here</a> to reset your password</p>\n" +
             "\n" +
-            "\n" +
-            "<p>If you did not request for this, please ignore this email.</p>\n";
+            "<p>If you did not request for this, please ignore this email.</p>";
 
 
     public void sendForgotPasswordEmail(String username, PasswordToken passwordToken) throws MessagingException {
@@ -39,7 +38,7 @@ public class EmailServiceImpl implements EmailService {
         }
         Context context = new Context();
         context.setVariable("passwordToken", passwordToken.getToken());
-//        String htmlContent = templateEngine.process("template/PasswordToken", context);
+//        String htmlContent = templateEngine.process("template/PasswordToken.html", context);
         sendHTMLEmail(username, FORGOT_PASSWORD_SUBJECT, HTML_CONTEXT);
     }
     @Override

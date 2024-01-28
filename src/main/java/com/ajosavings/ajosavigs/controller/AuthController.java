@@ -28,10 +28,8 @@ public class AuthController {
             PasswordToken passwordToken = usersService.forgotPassword(username);
             return ResponseEntity.ok("Password reset email sent successfully. Token: " + passwordToken.getToken());
         } catch (UserNotFoundException e) {
-            log.error("User not found", e);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found: " + e.getMessage());
         } catch (MessagingException e) {
-            log.error("Error sending reset email", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error sending reset email: " + e.getMessage());
         }
     }
@@ -44,9 +42,14 @@ public class AuthController {
             return ResponseEntity.badRequest().body("Password token is invalid or expired.");
         }
     }
-    @PostMapping("/reset-password")
-    public ResponseEntity<String> resetPassword(@PathVariable String token, @RequestBody PasswordDTO passwordDTO) throws ResourceNotFoundException {
-        return usersService.resetPassword(token, passwordDTO);
+    @PostMapping("/reset-password/{token}")
+    public ResponseEntity<String> resetPassword(@PathVariable String token, @RequestBody PasswordDTO passwordDTO) {
+        try {
+            return usersService.resetPassword(token, passwordDTO);
+        } catch (ResourceNotFoundException e) {
+            return new ResponseEntity<>("token not found or has expired or the token is invalid", HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>("An unexpected error occurred", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
-
 }

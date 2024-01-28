@@ -6,6 +6,7 @@ import com.ajosavings.ajosavigs.configuration.PasswordConfig;
 import com.ajosavings.ajosavigs.dto.PasswordDTO;
 import com.ajosavings.ajosavigs.dto.SignUpRequest;
 import com.ajosavings.ajosavigs.enums.Role;
+import com.ajosavings.ajosavigs.exception.BadRequestException;
 import com.ajosavings.ajosavigs.exception.ResourceNotFoundException;
 import com.ajosavings.ajosavigs.exception.UserNotFoundException;
 import com.ajosavings.ajosavigs.models.PasswordToken;
@@ -42,7 +43,6 @@ public class UsersServiceImpl implements UsersService {
         if (!passwordConfig.validatePassword(signUpRequest.getPassword())) {
             throw new IllegalArgumentException("Invalid password format");
         }
-
         Users user = new Users();
         user.setUsername(signUpRequest.getUsername());
         user.setPassword(passwordConfig.passwordEncoder().encode(signUpRequest.getPassword()));
@@ -68,7 +68,8 @@ public class UsersServiceImpl implements UsersService {
         }
         PasswordToken passwordToken = new PasswordToken();
         passwordToken.setToken(generatePasswordToken());
-        passwordToken.setUsername(username);
+        passwordToken.setUsername(user.getUsername());
+        passwordToken.setUser(user);
         PasswordToken passwordToken1 = passwordTokenRepository.save(passwordToken);
         emailService.sendForgotPasswordEmail(user.getUsername(), passwordToken);
         return passwordToken1;
@@ -76,13 +77,12 @@ public class UsersServiceImpl implements UsersService {
 
     @Override
     public boolean verifyPasswordToken(String token) {
-        PasswordToken passwordToken = passwordTokenRepository.findByToken(token).orElseThrow(() ->
+        PasswordToken passwordToken = passwordTokenRepository.findByTokenIgnoreCase(token).orElseThrow(() ->
                 new NullPointerException("Token is invalid"));
         if (passwordToken.getIsValid().equals(false)) {
             return false;
         }
         if (passwordToken.getExpirationTime().isAfter(LocalDateTime.now())) {
-
             try {
                 passwordToken.setIsValid(false);
                 passwordTokenRepository.save(passwordToken);
@@ -92,18 +92,33 @@ public class UsersServiceImpl implements UsersService {
         }
         return true;
     }
-    @Transactional
-    @Override
-    public ResponseEntity<String> resetPassword(String token, PasswordDTO passwordDTO) throws ResourceNotFoundException {
-        Optional<PasswordToken> passwordToken = passwordTokenRepository.findByToken(token);
-        if (passwordToken.isEmpty()) {
-            throw new ResourceNotFoundException("Invalid reset password token");
-        }
-        if (Objects.equals(passwordDTO.getPassword(), passwordDTO.getConfirmPassword())) {
-            Users user = userRepository.findByUsername(passwordDTO.getUsername());
-            user.setPassword(new BCryptPasswordEncoder().encode(passwordDTO.getPassword()));
-            userRepository.save(user);
-        }
-        return new ResponseEntity<>(HttpStatus.OK);
+@Override
+public ResponseEntity<String> resetPassword(String token, PasswordDTO passwordDTO) throws ResourceNotFoundException {
+    Optional<PasswordToken> passwordTokenOptional = passwordTokenRepository.findByTokenIgnoreCase(token);
+
+    if (passwordTokenOptional.isEmpty()) {
+        throw new ResourceNotFoundException("Invalid or expired reset password token");
     }
+    PasswordToken passwordToken = passwordTokenOptional.get();
+
+    // Check if the token is still valid and has not expired
+    if (!passwordToken.getIsValid() || passwordToken.getExpirationTime().isBefore(LocalDateTime.now())) {
+        throw new ResourceNotFoundException("Invalid or expired reset password token");
+    }
+    if (!passwordConfig.validatePassword(passwordDTO.getPassword())){
+        throw new BadRequestException("Invalid password format", HttpStatus.BAD_REQUEST);
+    }
+    if (Objects.equals(passwordDTO.getPassword(), passwordDTO.getConfirmPassword())) {
+        Users user = userRepository.findByUsername(passwordDTO.getUsername());
+        user.setPassword(new BCryptPasswordEncoder().encode(passwordDTO.getPassword()));
+        userRepository.save(user);
+
+        // set the token isvalid to false after use
+        passwordToken.setIsValid(false);
+        passwordTokenRepository.save(passwordToken);
+        }
+
+    return new ResponseEntity<>("Password successfully reset", HttpStatus.OK);
+    }
+
 }
