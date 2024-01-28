@@ -40,6 +40,11 @@ public class SecurityFilterChainConfig {
                                 .permitAll()
 
                                 .requestMatchers(POST,"/api/v1/auth/userReg").permitAll()
+
+                                .requestMatchers(HttpMethod.POST, "/api/v1/signup/normal").permitAll()
+                                .requestMatchers("/api/v1/auth/**").permitAll()
+
+                ).sessionManagement((session) ->
                                 .requestMatchers(POST,"registered-user","/logout").authenticated()
                                 .requestMatchers(HttpMethod.POST, "/api/v1/signup/normal", "api/v1/auth/forgot").permitAll()
                                 .requestMatchers(HttpMethod.POST, "/api/v1/signup/google").permitAll())
@@ -51,7 +56,6 @@ public class SecurityFilterChainConfig {
 
         http.csrf(csrf->csrf.disable());
         http.cors().configurationSource(corsConfigurationSource);
-//         http.cors(corsConfigurationSource-> corsConfigurationSource.disable());
         return http.build();
     }
 }

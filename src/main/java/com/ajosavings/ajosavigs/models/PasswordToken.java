@@ -1,10 +1,7 @@
 package com.ajosavings.ajosavigs.models;
 
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -26,5 +23,9 @@ public class PasswordToken {
     private Boolean isValid = true;
     private String username;
     private LocalDateTime expirationTime = LocalDateTime.now().plusMinutes(15);
+
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private Users user;
 
 }
