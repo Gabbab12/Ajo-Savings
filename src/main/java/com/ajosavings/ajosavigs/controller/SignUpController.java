@@ -1,6 +1,6 @@
 package com.ajosavings.ajosavigs.controller;
 
-import com.ajosavings.ajosavigs.dto.SignUpRequest;
+import com.ajosavings.ajosavigs.dto.request.SignUpRequest;
 import com.ajosavings.ajosavigs.service.UsersService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;

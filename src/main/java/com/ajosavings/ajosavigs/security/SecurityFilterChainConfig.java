@@ -40,12 +40,16 @@ public class SecurityFilterChainConfig {
                                 .permitAll()
 
                                 .requestMatchers(POST,"/api/v1/auth/userReg").permitAll()
+
                                 .requestMatchers(HttpMethod.POST, "/api/v1/signup/normal").permitAll()
-//                                .requestMatchers(HttpMethod.POST,"/api/v1/auth/forgot").permitAll()
                                 .requestMatchers("/api/v1/auth/**").permitAll()
 
-//                                .requestMatchers(HttpMethod.GET,"/api/v1/auth/verify").permitAll()
                 ).sessionManagement((session) ->
+                                .requestMatchers(POST,"registered-user","/logout").authenticated()
+                                .requestMatchers(HttpMethod.POST, "/api/v1/signup/normal", "api/v1/auth/forgot").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/api/v1/signup/google").permitAll())
+
+                .sessionManagement((session) ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(filterConfiguration, UsernamePasswordAuthenticationFilter.class);
