@@ -2,9 +2,12 @@ package com.ajosavings.ajosavigs.service.serviceImpl;
 
 
 
+import com.ajosavings.ajosavigs.configuration.JwtService;
 import com.ajosavings.ajosavigs.configuration.PasswordConfig;
-import com.ajosavings.ajosavigs.dto.PasswordDTO;
-import com.ajosavings.ajosavigs.dto.SignUpRequest;
+import com.ajosavings.ajosavigs.dto.request.LoginRequest;
+import com.ajosavings.ajosavigs.dto.request.PasswordDTO;
+import com.ajosavings.ajosavigs.dto.request.SignUpRequest;
+import com.ajosavings.ajosavigs.dto.response.AuthenticationResponse;
 import com.ajosavings.ajosavigs.enums.Role;
 import com.ajosavings.ajosavigs.exception.ResourceNotFoundException;
 import com.ajosavings.ajosavigs.exception.UserNotFoundException;
@@ -19,6 +22,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,6 +47,10 @@ public class UsersServiceImpl implements UsersService {
     private final PasswordConfig passwordConfig;
     private final PasswordTokenRepository passwordTokenRepository;
     private final EmailServiceImpl emailService;
+    private final JwtService jwtService;
+    private final AuthenticationManager authenticationManager;
+
+
 
     public Users signUp(SignUpRequest signUpRequest) {
 
@@ -106,4 +121,38 @@ public class UsersServiceImpl implements UsersService {
         }
         return new ResponseEntity<>(HttpStatus.OK);
     }
+    @Override
+    public ResponseEntity<AuthenticationResponse> loginRegisteredUser(LoginRequest request) {
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.getUsername(),
+                            request.getPassword()
+                    )
+            );
+        } catch (AuthenticationException e) {
+            throw new BadCredentialsException("Invalid username or password");
+        }
+
+        Users users = userRepository.findByUsernameIgnoreCase(request.getUsername())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + request.getUsername()));
+
+        String jwtToken = jwtService.generateToken(users);
+        return new ResponseEntity<>(new AuthenticationResponse(jwtToken), HttpStatus.OK);
+    }
+
+    @Override
+    public void logout() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            String email = userDetails.getUsername();
+            Users user = userRepository.findByUsernameIgnoreCase(email).get();
+            System.out.println(user);
+        }
+        SecurityContextHolder.clearContext();
+    }
+
+
+
 }

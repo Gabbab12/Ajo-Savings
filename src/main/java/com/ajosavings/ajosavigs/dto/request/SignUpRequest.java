@@ -1,4 +1,4 @@
-package com.ajosavings.ajosavigs.dto;
+package com.ajosavings.ajosavigs.dto.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
