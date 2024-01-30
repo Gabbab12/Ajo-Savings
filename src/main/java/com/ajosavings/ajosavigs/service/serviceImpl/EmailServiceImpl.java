@@ -25,8 +25,7 @@ public class EmailServiceImpl implements EmailService {
     public static final String FORGOT_PASSWORD_SUBJECT = "Forgot Password";
     public static final String HTML_CONTEXT = "<p>Dear user, you have requested to reset your password.</p>\n" +
             "\n" +
-            "<!-- Display the verification token within the email content -->\n" +
-            "<p>Please click <a th:href='https://localhost:3000/forgotpassword' + ${passwordToken}>here</a> to reset your password</p>\n" +
+            "<p>Please click <a href='https://localhost:3000/forgotpassword' + ${passwordToken}>here</a> to reset your password</p>\n" +
             "\n" +
             "<p>If you did not request for this, please ignore this email.</p>";
 
