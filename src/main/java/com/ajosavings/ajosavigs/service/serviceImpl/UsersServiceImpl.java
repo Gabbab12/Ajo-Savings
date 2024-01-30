@@ -66,11 +66,31 @@ public class UsersServiceImpl implements UsersService {
         user.setPhoneNumber(signUpRequest.getPhoneNumber());
         user.setRole(Role.USERS);
         log.info(String.valueOf(user));
-        return userRepository.save(user);
+        userRepository.save(user);
 
+        Optional<PasswordToken> existingToken = passwordTokenRepository.findByUsername(user.getUsername());
+        PasswordToken passwordToken = existingToken.orElseGet(() -> {
+            // Generate a new token if none exists
+            PasswordToken newToken = new PasswordToken();
+            newToken.setVerificationToken(generateOtpToken());
+            newToken.setUsername(user.getUsername());
+            return newToken;
+        });
+        passwordTokenRepository.save(passwordToken);
+
+        String content = "Dear user, we at AjoSavings welcome you to this uncommon ways of saving your income.\n" +
+                "\n" +
+                "Please enter the below verification code to complete your registration\n" +
+                "\n" + passwordToken.getVerificationToken();
+
+        emailService.sendEmail(user.getUsername(), "VERIFICATION EMAIL", content);
+
+        return user;
     }
 
-
+    public String generateOtpToken(){
+        return RandomStringUtils.randomNumeric(6);
+    }
     public String generatePasswordToken(){
         String alphanumerictoken = RandomStringUtils.randomAlphanumeric(16);
         return alphanumerictoken;

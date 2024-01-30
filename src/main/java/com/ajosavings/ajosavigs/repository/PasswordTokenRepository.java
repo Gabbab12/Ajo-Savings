@@ -13,6 +13,11 @@ public interface PasswordTokenRepository extends JpaRepository<PasswordToken, Lo
     Optional<PasswordToken> findByVerificationToken(String verificationToken);
 
     Optional<PasswordToken> findByTokenIgnoreCase(String token);
+
+    Optional<PasswordToken> findByUsername(String username);
+
+    PasswordToken findByUsernameAndVerificationToken(String username, String otp);
+
 }
 
 
