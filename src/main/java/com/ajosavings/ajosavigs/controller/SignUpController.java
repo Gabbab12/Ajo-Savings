@@ -11,9 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/signup")
     public class SignUpController {
-
-
-        private final UsersService usersService;
+    private final UsersService usersService;
 
     public SignUpController(UsersService usersService) {
         this.usersService = usersService;
@@ -25,11 +23,9 @@ import org.springframework.web.bind.annotation.RestController;
             usersService.signUp(signUpRequest);
             return ResponseEntity.ok("signup successful, please proceed to your email for the verification of your account");
         } catch (Exception e) {
-            return ResponseEntity.status(500).body("Error during signup: + e.getMassage");
+            return ResponseEntity.status(500).body("Error during signup: " + e.getMessage());
         }
-
     }
-
 }
 
 
