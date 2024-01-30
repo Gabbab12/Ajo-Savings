@@ -1,5 +1,6 @@
 package com.ajosavings.ajosavigs.service;
 
+import com.ajosavings.ajosavigs.dto.request.GoogleSignUpRequest;
 import com.ajosavings.ajosavigs.dto.request.LoginRequest;
 import com.ajosavings.ajosavigs.dto.request.PasswordDTO;
 import com.ajosavings.ajosavigs.dto.request.SignUpRequest;
@@ -17,6 +18,8 @@ public interface UsersService {
    Users signUp(SignUpRequest signUpRequest);
 
     PasswordToken forgotPassword(String email) throws MessagingException;
+
+    Users googleSignup(GoogleSignUpRequest googleSignUpRequest);
 
     boolean verifyPasswordToken(String token);
 

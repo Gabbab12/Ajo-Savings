@@ -4,6 +4,7 @@ package com.ajosavings.ajosavigs.service.serviceImpl;
 
 import com.ajosavings.ajosavigs.configuration.JwtService;
 import com.ajosavings.ajosavigs.configuration.PasswordConfig;
+import com.ajosavings.ajosavigs.dto.request.GoogleSignUpRequest;
 import com.ajosavings.ajosavigs.dto.request.LoginRequest;
 import com.ajosavings.ajosavigs.dto.request.PasswordDTO;
 import com.ajosavings.ajosavigs.dto.request.SignUpRequest;
@@ -33,7 +34,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
@@ -109,6 +109,18 @@ public class UsersServiceImpl implements UsersService {
         emailService.sendForgotPasswordEmail(user.getUsername(), passwordToken);
         return passwordToken1;
     }
+
+    @Override
+    public Users googleSignup(GoogleSignUpRequest googleSignUpRequest) {
+        Users existingUser = userRepository.findByUsername(googleSignUpRequest.getEmail());
+        if (existingUser != null) {
+            return existingUser;
+        }
+        Users user = new Users();
+        user.setUsername(googleSignUpRequest.getEmail());
+        return userRepository.save(user);
+    }
+
 
     @Override
     public boolean verifyPasswordToken(String token) {

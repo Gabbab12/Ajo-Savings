@@ -1,5 +1,6 @@
 package com.ajosavings.ajosavigs.controller;
 
+import com.ajosavings.ajosavigs.dto.request.GoogleSignUpRequest;
 import com.ajosavings.ajosavigs.dto.request.SignUpRequest;
 import com.ajosavings.ajosavigs.models.PasswordToken;
 import com.ajosavings.ajosavigs.models.Users;
@@ -45,6 +46,17 @@ import java.time.LocalDateTime;
             return new ResponseEntity<>("OTP verified successfully", HttpStatus.OK);
         } else {
             return new ResponseEntity<>("Invalid or expired OTP", HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @PostMapping("/google")
+    public  ResponseEntity<String> signupGoogle(@RequestBody GoogleSignUpRequest googleSignUpRequest) {
+        try {
+
+            usersService.googleSignup(googleSignUpRequest);
+            return ResponseEntity.ok("Google normal signup successful");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error during Google signup:" + e.getMessage());
         }
     }
 
