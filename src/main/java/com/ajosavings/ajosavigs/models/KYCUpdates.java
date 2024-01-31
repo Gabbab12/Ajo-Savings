@@ -19,6 +19,7 @@ public class KYCUpdates extends AuditBaseEntity{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @NotBlank(message = "please input your gender")
     private Gender gender;

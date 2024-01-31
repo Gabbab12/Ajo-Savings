@@ -4,11 +4,16 @@ import com.ajosavings.ajosavigs.enums.Gender;
 import com.ajosavings.ajosavigs.enums.IdentificationType;
 import jakarta.persistence.Column;
 import jakarta.validation.constraints.NotBlank;
-import lombok.Data;
+import lombok.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Date;
 
-@Data
+@Builder
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class KycUpdateDTO {
     private Gender gender;
     private String occupation;
@@ -19,5 +24,4 @@ public class KycUpdateDTO {
     private String identificationNumber;
     private String uploadIdentificationDocument;
     private String uploadProofOfAddress;
-
 }

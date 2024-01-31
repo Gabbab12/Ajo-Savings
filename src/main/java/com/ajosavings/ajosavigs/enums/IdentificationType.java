@@ -2,6 +2,7 @@ package com.ajosavings.ajosavigs.enums;
 
 public enum IdentificationType {
     NIN,
-    DRIVER_LICENCE,
-    PASSPORT
+    DRIVERS_LICENCE,
+    PASSPORT,
+    NEPA_BILL
 }
