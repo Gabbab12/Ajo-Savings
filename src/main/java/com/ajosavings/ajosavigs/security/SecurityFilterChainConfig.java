@@ -49,7 +49,7 @@ public class SecurityFilterChainConfig {
                                 .requestMatchers(POST,"/api/v1/auth/userReg").permitAll()
 
                                 .requestMatchers(HttpMethod.POST, "/api/v1/signup/normal").permitAll()
-                                .requestMatchers("/api/v1/auth/**").permitAll()
+                                .requestMatchers("/api/v1/auth/**", "/update/**", "api/ajoGroup/**").permitAll()
 
                 )
 //                .sessionManagement((session) ->
