@@ -21,4 +21,16 @@ public class AjoGroupController {
     public ResponseEntity<AjoGroup> createAjoGroup(@RequestBody AjoGroupDTO ajoGroupDTO) {
         return ajoGroupService.createAjoGroup(ajoGroupDTO);
     }
+
+    @PostMapping("/add-user/{groupId}")
+    public ResponseEntity<AjoGroup> addUserToGroup(@PathVariable Long groupId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        Users user = (Users) authentication.getPrincipal();
+        ResponseEntity<AjoGroup> response = ajoGroupService.addUsers(groupId, user);
+
+        return response;
+    }
 }
