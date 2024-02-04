@@ -8,5 +8,5 @@ import org.springframework.http.ResponseEntity;
 public interface AjoGroupService {
     ResponseEntity<AjoGroup> createAjoGroup(AjoGroupDTO ajoGroupDTO);
 
-//    ResponseEntity<AjoGroup> addUsers(Long groupId, Users users);
+    ResponseEntity<AjoGroup> addUsers(Long groupId, Users users);
 }

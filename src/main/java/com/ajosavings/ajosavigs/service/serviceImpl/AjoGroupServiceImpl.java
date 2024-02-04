@@ -75,4 +75,36 @@ public class AjoGroupServiceImpl implements AjoGroupService {
         }
         return availableSlots;
     }
+    @Override
+    public ResponseEntity<AjoGroup> addUsers(Long groupId, Users user) {
+        Optional<AjoGroup> optionalAjoGroup = ajoGroupRepository.findById(groupId);
+
+        if (optionalAjoGroup.isEmpty()) {
+            throw new ResourceNotFoundException("AjoGroup not found with id: " + groupId);
+        }
+        AjoGroup ajoGroup = optionalAjoGroup.get();
+
+        if (ajoGroup.isClosed()) {
+            throw new BadRequestException("AjoGroup is closed for new participant", HttpStatus.BAD_REQUEST);
+        }
+        if (ajoGroup.getUsers().contains(user)) {
+            throw new BadRequestException("User is already part of the AjoGroup", HttpStatus.BAD_REQUEST);
+        }
+        int randomIndex = (int) (Math.random() * ajoGroup.getAvailableSlots().size());
+        int allocatedSlot = ajoGroup.getAvailableSlots().remove(randomIndex);
+
+        user.setAjoSlot(allocatedSlot);
+
+        ajoGroup.getUsers().add(user);
+        ajoGroup.setAvailableSlots(updateAvailableSlots(ajoGroup));
+
+        ajoGroup.setClosed(ajoGroup.getUsers().size() >= ajoGroup.getNumberOfParticipant());
+
+        ajoGroupRepository.save(ajoGroup);
+
+        userRepository.save(user);
+
+        return ResponseEntity.status(HttpStatus.OK).body(ajoGroup);
+    }
+
 }
