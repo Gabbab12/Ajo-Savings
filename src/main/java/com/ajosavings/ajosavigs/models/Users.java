@@ -1,12 +1,12 @@
 package com.ajosavings.ajosavigs.models;
 
 import com.ajosavings.ajosavigs.enums.Role;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import net.minidev.json.annotate.JsonIgnore;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -36,11 +36,7 @@ public class Users extends AuditBaseEntity implements UserDetails {
     private String password;
     @Enumerated(EnumType.STRING)
     private Role role;
-
-    @ManyToOne
-    @JoinColumn(name = "group_id")
-    private AjoGroup ajoGroup;
-
+    private int ajoSlot;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
