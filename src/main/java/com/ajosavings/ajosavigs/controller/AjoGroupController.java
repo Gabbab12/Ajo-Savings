@@ -11,6 +11,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("api/ajoGroup")
@@ -32,5 +34,10 @@ public class AjoGroupController {
         ResponseEntity<AjoGroup> response = ajoGroupService.addUsers(groupId, user);
 
         return response;
+    }
+
+    @GetMapping
+    public ResponseEntity<List<AjoGroup>> getAllGroups() {
+        return ajoGroupService.getAllGroups();
     }
 }
