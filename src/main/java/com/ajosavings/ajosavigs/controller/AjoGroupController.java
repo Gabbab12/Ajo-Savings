@@ -12,6 +12,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequiredArgsConstructor
@@ -39,5 +40,13 @@ public class AjoGroupController {
     @GetMapping
     public ResponseEntity<List<AjoGroup>> getAllGroups() {
         return ajoGroupService.getAllGroups();
+    }
+
+    @GetMapping("/get-ajoGroup/{groupId}")
+    public ResponseEntity<AjoGroup> getAjoGroupDetails(@PathVariable Long groupId) {
+        Optional<AjoGroup> optionalAjoGroup = ajoGroupService.getAjoGroupDetails(groupId);
+
+        return optionalAjoGroup.map(ajoGroup -> ResponseEntity.ok().body(ajoGroup))
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 }
