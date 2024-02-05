@@ -114,4 +114,9 @@ public class AjoGroupServiceImpl implements AjoGroupService {
         return ResponseEntity.ok(groups);
 
     }
+
+    @Override
+    public Optional<AjoGroup> getAjoGroupDetails(Long groupId) {
+        return ajoGroupRepository.findById(groupId);
+    }
 }
