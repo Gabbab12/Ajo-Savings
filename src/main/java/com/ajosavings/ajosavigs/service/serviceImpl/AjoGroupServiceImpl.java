@@ -107,4 +107,11 @@ public class AjoGroupServiceImpl implements AjoGroupService {
         return ResponseEntity.status(HttpStatus.OK).body(ajoGroup);
     }
 
+
+    public ResponseEntity<List<AjoGroup>> getAllGroups() {
+
+        List<AjoGroup> groups = ajoGroupRepository.findAll();
+        return ResponseEntity.ok(groups);
+
+    }
 }
