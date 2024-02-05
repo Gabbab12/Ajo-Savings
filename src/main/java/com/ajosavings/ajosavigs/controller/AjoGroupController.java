@@ -42,7 +42,7 @@ public class AjoGroupController {
         return ajoGroupService.getAllGroups();
     }
 
-    @GetMapping("/get-ajoGroup/{groupId}")
+    @GetMapping("/groupDetails/{groupId}")
     public ResponseEntity<AjoGroup> getAjoGroupDetails(@PathVariable Long groupId) {
         Optional<AjoGroup> optionalAjoGroup = ajoGroupService.getAjoGroupDetails(groupId);
 

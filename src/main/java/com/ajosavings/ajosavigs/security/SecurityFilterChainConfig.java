@@ -18,6 +18,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
+import static org.springframework.http.HttpMethod.GET;
 import static org.springframework.http.HttpMethod.POST;
 
 @RequiredArgsConstructor
@@ -47,6 +48,7 @@ public class SecurityFilterChainConfig {
                                 .permitAll()
 
                                 .requestMatchers(POST,"/api/v1/auth/userReg").permitAll()
+                                .requestMatchers("/api/v1/signup/**").permitAll()
 
                                 .requestMatchers(HttpMethod.POST, "/api/v1/signup/normal").permitAll()
                                 .requestMatchers("/api/v1/auth/**", "/update/**", "api/ajoGroup/**").permitAll()
