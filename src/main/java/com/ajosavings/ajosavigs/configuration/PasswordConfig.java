@@ -15,6 +15,10 @@ public class PasswordConfig {
             "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!])(?=\\S+$).{8,}$";
     private final Pattern pattern = Pattern.compile(PASSWORD_PATTERN);
 
+    public static boolean isValid(String password) {
+        return password.matches(PASSWORD_PATTERN) && password.length() >= 8 && password.length() <= 20;
+    }
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();

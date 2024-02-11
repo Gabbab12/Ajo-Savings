@@ -1,12 +1,12 @@
 package com.ajosavings.ajosavigs.controller;
 
 import com.ajosavings.ajosavigs.dto.request.LoginRequest;
+import com.ajosavings.ajosavigs.dto.request.PasswordChangeDTO;
 import com.ajosavings.ajosavigs.dto.request.PasswordDTO;
 import com.ajosavings.ajosavigs.dto.response.AuthenticationResponse;
 import com.ajosavings.ajosavigs.exception.ResourceNotFoundException;
 import com.ajosavings.ajosavigs.exception.UserNotFoundException;
 import com.ajosavings.ajosavigs.models.PasswordToken;
-import com.ajosavings.ajosavigs.service.UsersService;
 import com.ajosavings.ajosavigs.service.serviceImpl.UsersServiceImpl;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
@@ -68,5 +68,10 @@ public class AuthController {
     @PostMapping("/logout")
     public void logout() {
         usersService.logout();
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<String> changePassword(@RequestBody PasswordChangeDTO passwordChangeDTO){
+        return  usersService.changePassword(passwordChangeDTO);
     }
 }
