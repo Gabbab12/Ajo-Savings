@@ -17,6 +17,7 @@ public class AjoGroupDTO {
     private String duration;
     private int numberOfParticipant;
     private PaymentPeriod paymentPeriod;
+    private String profilePicture;
     private LocalTime time;
     private String purposeAndGoals;
 

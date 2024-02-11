@@ -4,6 +4,7 @@ import com.ajosavings.ajosavigs.enums.PaymentPeriod;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -47,6 +48,8 @@ public class AjoGroup extends AuditBaseEntity{
     @NotBlank(message = "please enter the purpose and goals of this group")
     private String purposeAndGoals;
     private double estimatedCollection;
+
+    private String profilePicture;
 
     private int totalSlot;
 
