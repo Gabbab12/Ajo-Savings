@@ -52,6 +52,7 @@ public class AjoGroupServiceImpl implements AjoGroupService {
         ajoGroup.setDuration(ajoGroupDTO.getDuration());
         ajoGroup.setNumberOfParticipant(ajoGroupDTO.getNumberOfParticipant());
         ajoGroup.setPaymentPeriod(ajoGroupDTO.getPaymentPeriod());
+        ajoGroup.setProfilePicture(ajoGroupDTO.getProfilePicture());
         ajoGroup.setTime(ajoGroupDTO.getTime());
         ajoGroup.setPurposeAndGoals(ajoGroupDTO.getPurposeAndGoals());
 
