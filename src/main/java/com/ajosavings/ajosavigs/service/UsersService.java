@@ -1,6 +1,7 @@
 package com.ajosavings.ajosavigs.service;
 
 import com.ajosavings.ajosavigs.dto.request.LoginRequest;
+import com.ajosavings.ajosavigs.dto.request.PasswordChangeDTO;
 import com.ajosavings.ajosavigs.dto.request.PasswordDTO;
 import com.ajosavings.ajosavigs.dto.request.SignUpRequest;
 import com.ajosavings.ajosavigs.dto.response.AuthenticationResponse;
@@ -23,7 +24,10 @@ public interface UsersService {
     @Transactional
     ResponseEntity<String> resetPassword(String token, PasswordDTO passwordDTO) throws ResourceNotFoundException;
 
-    ResponseEntity<AuthenticationResponse> loginRegisteredUser(LoginRequest request);
+    ResponseEntity<String> changePassword(PasswordChangeDTO PasswordChangeDTO);
+    boolean oldPasswordIsValid(Users users, String oldPassword);
+
+ ResponseEntity<AuthenticationResponse> loginRegisteredUser(LoginRequest request);
 
     void logout();
 }

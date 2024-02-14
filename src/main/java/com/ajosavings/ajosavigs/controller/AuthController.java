@@ -1,6 +1,7 @@
 package com.ajosavings.ajosavigs.controller;
 
 import com.ajosavings.ajosavigs.dto.request.LoginRequest;
+import com.ajosavings.ajosavigs.dto.request.PasswordChangeDTO;
 import com.ajosavings.ajosavigs.dto.request.PasswordDTO;
 import com.ajosavings.ajosavigs.dto.response.AuthenticationResponse;
 import com.ajosavings.ajosavigs.exception.ResourceNotFoundException;
@@ -68,5 +69,10 @@ public class AuthController {
     @PostMapping("/logout")
     public void logout() {
         usersService.logout();
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<String> changePassword(@RequestBody PasswordChangeDTO passwordChangeDTO){
+        return  usersService.changePassword(passwordChangeDTO);
     }
 }
