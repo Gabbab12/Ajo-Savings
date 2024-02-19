@@ -182,6 +182,8 @@ public ResponseEntity<String> resetPassword(String token, PasswordDTO passwordDT
         return passwordEncoder.matches(oldPassword, user.getPassword());
     }
 
+    
+
 
     @Override
     public ResponseEntity<AuthenticationResponse> loginRegisteredUser(LoginRequest request) {
