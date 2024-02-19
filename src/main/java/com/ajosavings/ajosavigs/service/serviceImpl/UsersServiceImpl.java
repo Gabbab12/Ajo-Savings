@@ -1,6 +1,7 @@
 package com.ajosavings.ajosavigs.service.serviceImpl;
 
 
+
 import com.ajosavings.ajosavigs.configuration.JwtService;
 import com.ajosavings.ajosavigs.configuration.PasswordConfig;
 import com.ajosavings.ajosavigs.dto.request.LoginRequest;
@@ -32,6 +33,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
@@ -49,6 +51,7 @@ public class UsersServiceImpl implements UsersService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
+
 
     public Users signUp(SignUpRequest signUpRequest) {
 
@@ -85,16 +88,15 @@ public class UsersServiceImpl implements UsersService {
         return user;
     }
 
-    public String generateOtpToken() {
+    public String generateOtpToken(){
         return RandomStringUtils.randomNumeric(6);
     }
-
-    public String generatePasswordToken() {
-        return RandomStringUtils.randomAlphanumeric(16);
+    public String generatePasswordToken(){
+        String alphanumerictoken = RandomStringUtils.randomAlphanumeric(16);
+        return alphanumerictoken;
     }
-
     @Override
-    public PasswordToken forgotPassword(String username) throws MessagingException {
+    public PasswordToken forgotPassword(String username) throws MessagingException{
         Users user = userRepository.findByUsername(username);
         if (user == null) {
             throw new UserNotFoundException("User not found with this username: " + username, HttpStatus.NOT_FOUND);
@@ -125,34 +127,33 @@ public class UsersServiceImpl implements UsersService {
         }
         return true;
     }
+@Override
+public ResponseEntity<String> resetPassword(String token, PasswordDTO passwordDTO) throws ResourceNotFoundException {
+    Optional<PasswordToken> passwordTokenOptional = passwordTokenRepository.findByTokenIgnoreCase(token);
 
-    @Override
-    public ResponseEntity<String> resetPassword(String token, PasswordDTO passwordDTO) throws ResourceNotFoundException {
-        Optional<PasswordToken> passwordTokenOptional = passwordTokenRepository.findByTokenIgnoreCase(token);
+    if (passwordTokenOptional.isEmpty()) {
+        throw new ResourceNotFoundException("Invalid or expired reset password token");
+    }
+    PasswordToken passwordToken = passwordTokenOptional.get();
 
-        if (passwordTokenOptional.isEmpty()) {
-            throw new ResourceNotFoundException("Invalid or expired reset password token");
+    // Check if the token is still valid and has not expired
+    if (!passwordToken.getIsValid() || passwordToken.getExpirationTime().isBefore(LocalDateTime.now())) {
+        throw new ResourceNotFoundException("Invalid or expired reset password token");
+    }
+    if (!passwordConfig.validatePassword(passwordDTO.getPassword())){
+        throw new BadRequestException("Invalid password format", HttpStatus.BAD_REQUEST);
+    }
+    if (Objects.equals(passwordDTO.getPassword(), passwordDTO.getConfirmPassword())) {
+        Users user = userRepository.findByUsername(passwordDTO.getUsername());
+        user.setPassword(new BCryptPasswordEncoder().encode(passwordDTO.getPassword()));
+        userRepository.save(user);
+
+        // set the token isvalid to false after use
+        passwordToken.setIsValid(false);
+        passwordTokenRepository.save(passwordToken);
         }
-        PasswordToken passwordToken = passwordTokenOptional.get();
 
-        // Check if the token is still valid and has not expired
-        if (!passwordToken.getIsValid() || passwordToken.getExpirationTime().isBefore(LocalDateTime.now())) {
-            throw new ResourceNotFoundException("Invalid or expired reset password token");
-        }
-        if (!passwordConfig.validatePassword(passwordDTO.getPassword())) {
-            throw new BadRequestException("Invalid password format", HttpStatus.BAD_REQUEST);
-        }
-        if (Objects.equals(passwordDTO.getPassword(), passwordDTO.getConfirmPassword())) {
-            Users user = userRepository.findByUsername(passwordDTO.getUsername());
-            user.setPassword(new BCryptPasswordEncoder().encode(passwordDTO.getPassword()));
-            userRepository.save(user);
-
-            //set the token is valid to false after use
-            passwordToken.setIsValid(false);
-            passwordTokenRepository.save(passwordToken);
-        }
-
-        return new ResponseEntity<>("Password successfully reset", HttpStatus.OK);
+    return new ResponseEntity<>("Password successfully reset", HttpStatus.OK);
     }
 
     @Override
@@ -181,10 +182,33 @@ public class UsersServiceImpl implements UsersService {
     public boolean oldPasswordIsValid(Users user, String oldPassword) {
         return passwordEncoder.matches(oldPassword, user.getPassword());
     }
+    public ResponseEntity<String> changePassword(PasswordChangeDTO PasswordChangeDTO) {
+        Optional<Users> targetUser = userRepository.findById(PasswordChangeDTO.getUserId());
+        if(targetUser.isEmpty()){
+            throw new UserNotFoundException("User not found",HttpStatus.NOT_FOUND);
+        }
+        Users users = targetUser.get();
+        if(!oldPasswordIsValid(users, PasswordChangeDTO.getOldPassword())){
+            throw new IncorrectOldPasswordException("Incorrect old password!");
+        }
+        if (!PasswordConfig.isValid(PasswordChangeDTO.getNewPassword())) {
+            throw new BadRequestException("Invalid password format", HttpStatus.BAD_REQUEST);
+        }
+        if(!Objects.equals(PasswordChangeDTO.getNewPassword(), PasswordChangeDTO.getConfirmNewPassword())){
+            throw new PasswordMismatchException("Password does not match!");
+        }
+        users.setPassword(passwordEncoder.encode(PasswordChangeDTO.getNewPassword()));
+        userRepository.save(users);
+
+        return new ResponseEntity<>("Password changed successfully", HttpStatus.OK);
+    }
+
+    @Override
+    public boolean oldPasswordIsValid(Users user, String oldPassword) {
+        return passwordEncoder.matches(oldPassword, user.getPassword());
+    }
 
     
-
-
     @Override
     public ResponseEntity<AuthenticationResponse> loginRegisteredUser(LoginRequest request) {
         try {
