@@ -53,7 +53,6 @@ public class UsersServiceImpl implements UsersService {
     private final PasswordEncoder passwordEncoder;
 
 
-
     public Users signUp(SignUpRequest signUpRequest) {
 
         if (!passwordConfig.validatePassword(signUpRequest.getPassword())) {
@@ -183,7 +182,33 @@ public ResponseEntity<String> resetPassword(String token, PasswordDTO passwordDT
     public boolean oldPasswordIsValid(Users user, String oldPassword) {
         return passwordEncoder.matches(oldPassword, user.getPassword());
     }
+    public ResponseEntity<String> changePassword(PasswordChangeDTO PasswordChangeDTO) {
+        Optional<Users> targetUser = userRepository.findById(PasswordChangeDTO.getUserId());
+        if(targetUser.isEmpty()){
+            throw new UserNotFoundException("User not found",HttpStatus.NOT_FOUND);
+        }
+        Users users = targetUser.get();
+        if(!oldPasswordIsValid(users, PasswordChangeDTO.getOldPassword())){
+            throw new IncorrectOldPasswordException("Incorrect old password!");
+        }
+        if (!PasswordConfig.isValid(PasswordChangeDTO.getNewPassword())) {
+            throw new BadRequestException("Invalid password format", HttpStatus.BAD_REQUEST);
+        }
+        if(!Objects.equals(PasswordChangeDTO.getNewPassword(), PasswordChangeDTO.getConfirmNewPassword())){
+            throw new PasswordMismatchException("Password does not match!");
+        }
+        users.setPassword(passwordEncoder.encode(PasswordChangeDTO.getNewPassword()));
+        userRepository.save(users);
 
+        return new ResponseEntity<>("Password changed successfully", HttpStatus.OK);
+    }
+
+    @Override
+    public boolean oldPasswordIsValid(Users user, String oldPassword) {
+        return passwordEncoder.matches(oldPassword, user.getPassword());
+    }
+
+    
     @Override
     public ResponseEntity<AuthenticationResponse> loginRegisteredUser(LoginRequest request) {
         try {

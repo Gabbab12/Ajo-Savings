@@ -17,6 +17,10 @@ public class PasswordConfig {
     public static boolean isValid(String password) {
         return password.matches(PASSWORD_PATTERN) && password.length() >= 8 && password.length() <= 20;
     }
+
+    public static boolean isValid(String password) {
+        return password.matches(PASSWORD_PATTERN) && password.length() >= 8 && password.length() <= 20;
+    }
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();

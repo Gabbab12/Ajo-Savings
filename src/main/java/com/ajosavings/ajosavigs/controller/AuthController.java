@@ -7,7 +7,6 @@ import com.ajosavings.ajosavigs.dto.response.AuthenticationResponse;
 import com.ajosavings.ajosavigs.exception.ResourceNotFoundException;
 import com.ajosavings.ajosavigs.exception.UserNotFoundException;
 import com.ajosavings.ajosavigs.models.PasswordToken;
-import com.ajosavings.ajosavigs.service.UsersService;
 import com.ajosavings.ajosavigs.service.serviceImpl.UsersServiceImpl;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
