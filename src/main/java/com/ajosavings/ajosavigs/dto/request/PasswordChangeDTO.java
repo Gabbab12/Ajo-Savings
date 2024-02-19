@@ -9,3 +9,4 @@ public class PasswordChangeDTO {
     private String newPassword;
     private String confirmNewPassword;
 }
+}

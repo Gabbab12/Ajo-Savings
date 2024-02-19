@@ -30,6 +30,7 @@ public interface UsersService {
 
 
     ResponseEntity<AuthenticationResponse> loginRegisteredUser(LoginRequest request);
+ ResponseEntity<AuthenticationResponse> loginRegisteredUser(LoginRequest request);
 
     void logout();
 }

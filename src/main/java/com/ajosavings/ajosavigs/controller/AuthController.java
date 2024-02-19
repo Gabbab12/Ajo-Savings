@@ -74,5 +74,4 @@ public class AuthController {
     public ResponseEntity<String> changePassword(@RequestBody PasswordChangeDTO passwordChangeDTO){
         return  usersService.changePassword(passwordChangeDTO);
     }
-
 }
