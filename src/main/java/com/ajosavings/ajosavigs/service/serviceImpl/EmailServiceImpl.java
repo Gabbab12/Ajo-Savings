@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
@@ -42,13 +43,19 @@ public class EmailServiceImpl implements EmailService {
         sendHTMLEmail(username, FORGOT_PASSWORD_SUBJECT, HTML_CONTEXT);
     }
     @Override
+    @Async
     public void sendEmail(String toEmail, String subject, String content) {
         SimpleMailMessage mailMessage = new SimpleMailMessage();
         mailMessage.setTo(toEmail);
         mailMessage.setSubject(subject);
         mailMessage.setText(content);
+        try{
+            javaMailSender.send(mailMessage);
 
-        javaMailSender.send(mailMessage);
+        }catch (Exception exe){
+            log.info("Error while sending email");
+        }
+
     }
     @Override
     public void sendHTMLEmail(String toEmail, String subject, String htmlContent) throws MessagingException {

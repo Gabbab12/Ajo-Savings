@@ -26,11 +26,7 @@ public interface UsersService {
 
     ResponseEntity<String> changePassword(PasswordChangeDTO PasswordChangeDTO);
     boolean oldPasswordIsValid(Users users, String oldPassword);
-
-
-
     ResponseEntity<AuthenticationResponse> loginRegisteredUser(LoginRequest request);
- ResponseEntity<AuthenticationResponse> loginRegisteredUser(LoginRequest request);
 
     void logout();
 }
