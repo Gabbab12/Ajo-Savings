@@ -2,6 +2,7 @@ package com.ajosavings.ajosavigs.service.serviceImpl;
 
 import com.ajosavings.ajosavigs.dto.request.DepositDto;
 import com.ajosavings.ajosavigs.dto.request.TransactionRequest;
+import com.ajosavings.ajosavigs.enums.TransactionType;
 import com.ajosavings.ajosavigs.models.TransactionHistory;
 import com.ajosavings.ajosavigs.models.TransactionOtp;
 import com.ajosavings.ajosavigs.models.Users;
@@ -100,7 +101,7 @@ public class TransactionServiceImpl implements TransactionService {
         transactionHistory.setAmount(amount);
         transactionHistory.setDate(LocalDate.now());
         transactionHistory.setName(user.getFirstName() + " " + user.getLastName());
-        transactionHistory.setType("credit");
+        transactionHistory.setType(TransactionType.CREDIT);
         transactionHistory.setUser(user);
         return transactionHistory;
     }

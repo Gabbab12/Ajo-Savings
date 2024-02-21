@@ -1,5 +1,6 @@
 package com.ajosavings.ajosavigs.models;
 
+import com.ajosavings.ajosavigs.enums.TransactionType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,7 +22,8 @@ public class TransactionHistory {
     private BigDecimal amount;
     private LocalDate date;
     private String name;
-    private String type;
+    @Enumerated(EnumType.STRING)
+    private TransactionType type;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
