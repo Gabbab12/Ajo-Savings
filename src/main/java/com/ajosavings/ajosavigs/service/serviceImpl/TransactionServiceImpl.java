@@ -14,6 +14,8 @@ import com.ajosavings.ajosavigs.service.TransactionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -119,6 +121,7 @@ public class TransactionServiceImpl implements TransactionService {
         }
         transactionOtp.setAmount(transactionRequest.getAmount());
         transactionOtp.setTransactionOtp(generateTransactionOtp());
+        transactionOtp.setIsValid(true);
         transactionOtp.setExpiryTime(LocalDateTime.now().plusMinutes(15));
         otpRepository.save(transactionOtp);
         return transactionOtp;
@@ -192,6 +195,11 @@ public class TransactionServiceImpl implements TransactionService {
         BigDecimal newBalance = currentBalance.subtract(amount);
         user.setGlobalWallet(newBalance);
         userRepository.save(user);
+    }
+    @Override
+    public Page<TransactionHistory> getTransactionHistory(Users users, int page, int size){
+        PageRequest pageRequest = PageRequest.of(page, size);
+        return transactionHistoryRepository.findByUser(users, pageRequest);
     }
 
 }
