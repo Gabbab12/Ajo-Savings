@@ -10,4 +10,6 @@ public interface PersonalSavingsService {
     ResponseEntity<PersonalSavings> createPersonalSavings(PersonalSavingsDto savingsDto);
 
     ResponseEntity<String> withdrawToGlobalWallet(Long savingsId, BigDecimal amount);
+
+    void addMoneyToSavings(Long personalSavingsId, BigDecimal amount);
 }
