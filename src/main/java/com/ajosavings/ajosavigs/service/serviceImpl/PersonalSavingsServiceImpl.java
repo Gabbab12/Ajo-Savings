@@ -1,7 +1,6 @@
 package com.ajosavings.ajosavigs.service.serviceImpl;
 
 import com.ajosavings.ajosavigs.dto.request.PersonalSavingsDto;
-import com.ajosavings.ajosavigs.dto.request.TransactionRequest;
 import com.ajosavings.ajosavigs.enums.TransactionType;
 import com.ajosavings.ajosavigs.exception.AccessDeniedException;
 import com.ajosavings.ajosavigs.exception.InsufficientFundsException;
@@ -121,6 +120,41 @@ public class PersonalSavingsServiceImpl implements PersonalSavingsService {
         BigDecimal updatedAmountSaved = personalSavings.getAmountSaved().subtract(amount);
         personalSavings.setAmountSaved(updatedAmountSaved);
         return personalSavings;
+    }
+
+    @Override
+    public void addMoneyToSavings(Long personalSavingsId, BigDecimal amount) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Users users = (Users) authentication.getPrincipal();
+
+        Optional<PersonalSavings> optionalPersonalSavings = personalSavingsRepository.findById(personalSavingsId);
+        if (optionalPersonalSavings.isEmpty()) {
+            throw new ResourceNotFoundException("Savings not found with ID: " + personalSavingsId);
+        }
+
+        try {
+            PersonalSavings personalSavings = optionalPersonalSavings.get();
+            if (!personalSavings.getUsers().equals(users)) {
+                throw new AccessDeniedException("You are not authorized to add money to this savings", HttpStatus.UNAUTHORIZED);
+            }
+
+            BigDecimal updatedAmountSaved = personalSavings.getAmountSaved().add(amount);
+            personalSavings.setAmountSaved(updatedAmountSaved);
+            personalSavingsRepository.save(personalSavings);
+
+            TransactionHistory transactionHistory = new TransactionHistory();
+            transactionHistory.setAmount(amount);
+            transactionHistory.setDate(LocalDate.now());
+            transactionHistory.setName(personalSavings.getTarget());
+            transactionHistory.setType(TransactionType.CREDIT);
+            transactionHistory.setUser(users);
+            transactionHistoryRepository.save(transactionHistory);
+
+        } catch (AccessDeniedException e) {
+            throw new AccessDeniedException("You are not authorized to add money to this savings", HttpStatus.UNAUTHORIZED);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to add money to savings wallet.", e);
+        }
     }
 
 }
