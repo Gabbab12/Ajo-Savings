@@ -1,9 +1,14 @@
 package com.ajosavings.ajosavigs.controller;
 import com.ajosavings.ajosavigs.dto.request.DepositDto;
 import com.ajosavings.ajosavigs.dto.request.TransactionRequest;
+import com.ajosavings.ajosavigs.models.TransactionHistory;
+import com.ajosavings.ajosavigs.models.Users;
 import com.ajosavings.ajosavigs.service.serviceImpl.TransactionServiceImpl;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
@@ -24,6 +29,15 @@ public class TransactionController {
     @PostMapping("/verify")
     public ResponseEntity<?> verifyOtp(@RequestParam String otp, String username) {
         return transactionService.verifyOtp(otp, username);
+    }
+
+    @GetMapping("transaction-history")
+    public ResponseEntity<Page<TransactionHistory>> getTransactionHistory(@RequestParam(defaultValue = "0") int page,
+                                                                            @RequestParam(defaultValue = "10") int size){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Users user = (Users) authentication.getPrincipal();
+        Page<TransactionHistory> transactionHistoryPage = transactionService.getTransactionHistory(user, page, size);
+        return ResponseEntity.ok(transactionHistoryPage);
     }
 
 //    @PostMapping("withdraw")
