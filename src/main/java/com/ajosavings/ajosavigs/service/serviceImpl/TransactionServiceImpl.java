@@ -196,7 +196,7 @@ public class TransactionServiceImpl implements TransactionService {
         user.setGlobalWallet(newBalance);
         userRepository.save(user);
     }
-@Override
+    @Override
     public Page<TransactionHistory> getTransactionHistory(Users users, int page, int size){
         PageRequest pageRequest = PageRequest.of(page, size);
         return transactionHistoryRepository.findByUser(users, pageRequest);
