@@ -1,7 +1,9 @@
 package com.ajosavings.ajosavigs.controller;
 
+import com.ajosavings.ajosavigs.dto.request.DepositDto;
 import com.ajosavings.ajosavigs.dto.request.PersonalSavingsDto;
 import com.ajosavings.ajosavigs.dto.request.TransactionRequest;
+import com.ajosavings.ajosavigs.exception.ResourceNotFoundException;
 import com.ajosavings.ajosavigs.models.PersonalSavings;
 import com.ajosavings.ajosavigs.service.PersonalSavingsService;
 import com.ajosavings.ajosavigs.service.serviceImpl.PersonalSavingsServiceImpl;
@@ -38,9 +40,9 @@ public class PersonalSavingsController {
     }
 
     @PostMapping("/{personalSavingsId}/add-money")
-    public ResponseEntity<String> addMoneyToSavings( @PathVariable("personalSavingsId") Long personalSavingsId, @RequestBody TransactionRequest transactionRequest) {
+    public ResponseEntity<String> addMoneyToSavings(@PathVariable("personalSavingsId") Long personalSavingsId, @RequestBody DepositDto depositDto) {
         try {
-            personalSavingsService.addMoneyToSavings(personalSavingsId, transactionRequest.getAmount());
+            personalSavingsService.addMoneyToSavings(personalSavingsId, depositDto.getAmount());
             return ResponseEntity.ok("Money successfully added to savings wallet.");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to add money to savings wallet.");
