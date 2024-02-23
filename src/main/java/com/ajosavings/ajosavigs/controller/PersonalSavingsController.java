@@ -30,17 +30,17 @@ public class PersonalSavingsController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-    @PostMapping("/deposit/{savingsId}")
-    public ResponseEntity<String> depositToGlobalWallet(@PathVariable Long savingsId, @RequestParam BigDecimal amount) {
+    @PostMapping("/withdraw/{savingsId}")
+    public ResponseEntity<String> depositToGlobalWallet(@PathVariable Long savingsId, @RequestBody DepositDto depositDto) {
         try {
-            return savingsService.withdrawToGlobalWallet(savingsId, amount);
+            return savingsService.withdrawToGlobalWallet(savingsId, depositDto.getAmount());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred");
         }
     }
 
     @PostMapping("/{personalSavingsId}/add-money")
-    public ResponseEntity<String> addMoneyToSavings(@PathVariable("personalSavingsId") Long personalSavingsId, @RequestBody DepositDto depositDto) {
+    public ResponseEntity<String> addMoneyToSavings(@PathVariable Long personalSavingsId, @RequestBody DepositDto depositDto) {
         try {
             personalSavingsService.addMoneyToSavings(personalSavingsId, depositDto.getAmount());
             return ResponseEntity.ok("Money successfully added to savings wallet.");

@@ -89,13 +89,8 @@ public class PersonalSavingsServiceImpl implements PersonalSavingsService {
             users.setGlobalWallet(updatedGlobalWallet);
             userRepository.save(users);
 
-            TransactionHistory transactionHistory = new TransactionHistory();
-            transactionHistory.setAmount(amount);
-            transactionHistory.setDate(LocalDate.now());
-            transactionHistory.setName(personalSavings.getTarget());
-            transactionHistory.setType(TransactionType.CREDIT);
-            transactionHistory.setUser(users);
-            transactionHistoryRepository.save(transactionHistory);
+            saveTransactionHistory(amount, personalSavings.getTarget(), TransactionType.CREDIT, users);
+
 
             return ResponseEntity.accepted().body("Successfully transferred money to your global wallet");
         } catch (AccessDeniedException e) {
@@ -142,19 +137,28 @@ public class PersonalSavingsServiceImpl implements PersonalSavingsService {
             personalSavings.setAmountSaved(updatedAmountSaved);
             personalSavingsRepository.save(personalSavings);
 
-            TransactionHistory transactionHistory = new TransactionHistory();
-            transactionHistory.setAmount(amount);
-            transactionHistory.setDate(LocalDate.now());
-            transactionHistory.setName(personalSavings.getTarget());
-            transactionHistory.setType(TransactionType.CREDIT);
-            transactionHistory.setUser(users);
-            transactionHistoryRepository.save(transactionHistory);
+            BigDecimal updatedGlobalWallet = users.getGlobalWallet().subtract(amount);
+            users.setGlobalWallet(updatedGlobalWallet);
+            userRepository.save(users);
+
+            saveTransactionHistory(amount, personalSavings.getTarget(), TransactionType.CREDIT, users);
+
 
         } catch (AccessDeniedException e) {
             throw new AccessDeniedException("You are not authorized to add money to this savings", HttpStatus.UNAUTHORIZED);
         } catch (Exception e) {
             throw new RuntimeException("Failed to add money to savings wallet.", e);
         }
+    }
+
+    private void saveTransactionHistory(BigDecimal amount, String name, TransactionType type, Users user) {
+        TransactionHistory transactionHistory = new TransactionHistory();
+        transactionHistory.setAmount(amount);
+        transactionHistory.setDate(LocalDate.now());
+        transactionHistory.setName(name);
+        transactionHistory.setType(type);
+        transactionHistory.setUser(user);
+        transactionHistoryRepository.save(transactionHistory);
     }
 
 }
