@@ -48,4 +48,18 @@ public class PersonalSavingsController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to add money to savings wallet.");
         }
     }
+
+    @GetMapping("/{savingId}/goal")
+    public ResponseEntity<PersonalSavings> viewGoal(@PathVariable Long savingId) {
+        try {
+            PersonalSavings userGoal = personalSavingsService.viewGoal(savingId);
+            if (userGoal == null) {
+                return ResponseEntity.notFound().build();
+            } else {
+                return ResponseEntity.ok(userGoal);
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
 }
