@@ -151,6 +151,12 @@ public class PersonalSavingsServiceImpl implements PersonalSavingsService {
         }
     }
 
+    @Override
+    public PersonalSavings viewGoal(Long savingId) {
+        return personalSavingsRepository.findById(savingId).orElseThrow(()-> new ResourceNotFoundException("Goal not found for saving ID: " + savingId));
+
+    }
+
     private void saveTransactionHistory(BigDecimal amount, String name, TransactionType type, Users user) {
         TransactionHistory transactionHistory = new TransactionHistory();
         transactionHistory.setAmount(amount);
