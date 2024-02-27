@@ -5,6 +5,7 @@ import com.ajosavings.ajosavigs.models.AjoGroup;
 import com.ajosavings.ajosavigs.models.Users;
 import org.springframework.http.ResponseEntity;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface AjoGroupService {
@@ -12,6 +13,9 @@ public interface AjoGroupService {
 
     ResponseEntity<AjoGroup> addUsers(Long groupId, Users users);
 
+    ResponseEntity<List<AjoGroup>> getAllGroups();
+
     Optional<AjoGroup> getAjoGroupDetails(Long groupId);
 
+    ResponseEntity<AjoGroup> makeContribution(Long ajoGroupId);
 }

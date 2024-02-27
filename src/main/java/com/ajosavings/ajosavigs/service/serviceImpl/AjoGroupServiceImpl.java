@@ -1,18 +1,27 @@
 package com.ajosavings.ajosavigs.service.serviceImpl;
 
 import com.ajosavings.ajosavigs.dto.request.AjoGroupDTO;
+import com.ajosavings.ajosavigs.enums.TransactionType;
+import com.ajosavings.ajosavigs.exception.AccessDeniedException;
 import com.ajosavings.ajosavigs.exception.BadRequestException;
+import com.ajosavings.ajosavigs.exception.InsufficientFundsException;
 import com.ajosavings.ajosavigs.models.AjoGroup;
+import com.ajosavings.ajosavigs.models.TransactionHistory;
 import com.ajosavings.ajosavigs.models.Users;
 import com.ajosavings.ajosavigs.repository.AjoGroupRepository;
+import com.ajosavings.ajosavigs.repository.TransactionHistoryRepository;
 import com.ajosavings.ajosavigs.repository.UserRepository;
 import com.ajosavings.ajosavigs.service.AjoGroupService;
 import lombok.RequiredArgsConstructor;
 import org.apache.velocity.exception.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.*;
 
 @Service
@@ -21,6 +30,7 @@ public class AjoGroupServiceImpl implements AjoGroupService {
 
     private final AjoGroupRepository ajoGroupRepository;
     private final UserRepository userRepository;
+    private final TransactionHistoryRepository transactionHistoryRepository;
 
     @Override
     public ResponseEntity<AjoGroup> createAjoGroup(AjoGroupDTO ajoGroupDTO) {
@@ -108,9 +118,8 @@ public class AjoGroupServiceImpl implements AjoGroupService {
         return ResponseEntity.status(HttpStatus.OK).body(ajoGroup);
     }
 
-
+    @Override
     public ResponseEntity<List<AjoGroup>> getAllGroups() {
-
         List<AjoGroup> groups = ajoGroupRepository.findAll();
         return ResponseEntity.ok(groups);
 
@@ -119,5 +128,39 @@ public class AjoGroupServiceImpl implements AjoGroupService {
     @Override
     public Optional<AjoGroup> getAjoGroupDetails(Long groupId) {
         return ajoGroupRepository.findById(groupId);
+    }
+
+    @Override
+    public ResponseEntity<AjoGroup> makeContribution(Long ajoGroupId){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Users users = (Users) authentication.getPrincipal();
+
+        AjoGroup ajoGroup = ajoGroupRepository.findById(ajoGroupId).orElseThrow(() ->
+                new ResourceNotFoundException("AjoGroup with id "+ ajoGroupId + " does not exist"));
+
+        if(!ajoGroup.getUsers().contains(users)){
+            throw new AccessDeniedException("You are not a member of this Ajo Group", HttpStatus.NOT_ACCEPTABLE);
+        }
+        BigDecimal updatedGlobalWallet = users.getGlobalWallet().subtract(BigDecimal.valueOf(ajoGroup.getContributionAmount()));
+            if(updatedGlobalWallet.compareTo(BigDecimal.ZERO) < 0){
+                throw new InsufficientFundsException("Insufficient funds in your global wallet: " + users.getGlobalWallet(), HttpStatus.BAD_REQUEST);
+            }
+
+            BigDecimal totalGroupSavings = users.getTotalGroupSavings().add(BigDecimal.valueOf(ajoGroup.getContributionAmount()));
+            users.setTotalGroupSavings(totalGroupSavings);
+
+            users.setGlobalWallet(updatedGlobalWallet);
+            userRepository.save(users);
+
+            TransactionHistory transactionHistory = new TransactionHistory();
+            transactionHistory.setUser(users);
+            transactionHistory.setName(ajoGroup.getGroupName());
+            transactionHistory.setType(TransactionType.DEBIT);
+            transactionHistory.setAmount(BigDecimal.valueOf(ajoGroup.getContributionAmount()));
+            transactionHistory.setDate(LocalDate.now());
+
+            transactionHistoryRepository.save(transactionHistory);
+
+        return ResponseEntity.status(HttpStatus.OK).body(ajoGroup);
     }
 }

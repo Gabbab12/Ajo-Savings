@@ -41,6 +41,8 @@ public class Users extends AuditBaseEntity implements UserDetails {
     private int ajoSlot;
     @DecimalMin(value = "0.00", inclusive = true, message = "Wallet balance must be at least 0.00")
     private BigDecimal globalWallet = BigDecimal.ZERO;
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal totalGroupSavings = BigDecimal.ZERO;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
