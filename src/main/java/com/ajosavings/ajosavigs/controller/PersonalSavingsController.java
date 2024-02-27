@@ -2,8 +2,7 @@ package com.ajosavings.ajosavigs.controller;
 
 import com.ajosavings.ajosavigs.dto.request.DepositDto;
 import com.ajosavings.ajosavigs.dto.request.PersonalSavingsDto;
-import com.ajosavings.ajosavigs.dto.request.TransactionRequest;
-import com.ajosavings.ajosavigs.exception.ResourceNotFoundException;
+import com.ajosavings.ajosavigs.dto.response.SavingsWalletDTO;
 import com.ajosavings.ajosavigs.models.PersonalSavings;
 import com.ajosavings.ajosavigs.service.PersonalSavingsService;
 import com.ajosavings.ajosavigs.service.serviceImpl.PersonalSavingsServiceImpl;
@@ -61,5 +60,11 @@ public class PersonalSavingsController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+    }
+
+    @GetMapping("/view/{savingsId}")
+    public ResponseEntity<BigDecimal> viewSavingsWallet(@PathVariable Long savingsId) {
+        BigDecimal amountSaved = personalSavingsService.viewSavingsWallet(savingsId).getAmountSaved();
+        return ResponseEntity.ok(amountSaved);
     }
 }

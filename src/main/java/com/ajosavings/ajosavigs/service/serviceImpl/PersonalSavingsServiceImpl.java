@@ -1,6 +1,7 @@
 package com.ajosavings.ajosavigs.service.serviceImpl;
 
 import com.ajosavings.ajosavigs.dto.request.PersonalSavingsDto;
+import com.ajosavings.ajosavigs.dto.response.SavingsWalletDTO;
 import com.ajosavings.ajosavigs.enums.TransactionType;
 import com.ajosavings.ajosavigs.exception.AccessDeniedException;
 import com.ajosavings.ajosavigs.exception.InsufficientFundsException;
@@ -167,4 +168,15 @@ public class PersonalSavingsServiceImpl implements PersonalSavingsService {
         transactionHistoryRepository.save(transactionHistory);
     }
 
+
+    @Override
+    public SavingsWalletDTO viewSavingsWallet(Long savingsId) {
+        PersonalSavings personalSavings = personalSavingsRepository.findById(savingsId)
+                .orElseThrow(() -> new ResourceNotFoundException("Savings wallet not found with ID: " + savingsId));
+
+        SavingsWalletDTO dto = new SavingsWalletDTO();
+        dto.setAmountSaved(personalSavings.getAmountSaved());
+        return dto;
+    }
 }
+
