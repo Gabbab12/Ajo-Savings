@@ -37,7 +37,7 @@ public class AjoGroupController {
         return response;
     }
 
-    @GetMapping
+    @GetMapping("/explore")
     public ResponseEntity<List<AjoGroup>> getAllGroups() {
         return ajoGroupService.getAllGroups();
     }
@@ -48,5 +48,10 @@ public class AjoGroupController {
 
         return optionalAjoGroup.map(ajoGroup -> ResponseEntity.ok().body(ajoGroup))
                 .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/contribute/{ajoGroupId}")
+    public ResponseEntity<AjoGroup> makeContribution(@PathVariable Long ajoGroupId) {
+        return ajoGroupService.makeContribution(ajoGroupId);
     }
 }

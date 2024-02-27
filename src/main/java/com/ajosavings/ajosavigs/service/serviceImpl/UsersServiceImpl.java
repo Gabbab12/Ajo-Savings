@@ -51,7 +51,7 @@ public class UsersServiceImpl implements UsersService {
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
 
-
+    @Override
     public Users signUp(SignUpRequest signUpRequest) {
 
         if (!passwordConfig.validatePassword(signUpRequest.getPassword())) {
@@ -203,8 +203,14 @@ public class UsersServiceImpl implements UsersService {
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + request.getUsername()));
 
         String jwtToken = jwtService.generateToken(users);
-        return new ResponseEntity<>(new AuthenticationResponse(jwtToken), HttpStatus.OK);
+
+        AuthenticationResponse response = new AuthenticationResponse();
+        response.setToken(jwtToken);
+        response.setUser(users);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
 
     @Override
     public void logout() {
