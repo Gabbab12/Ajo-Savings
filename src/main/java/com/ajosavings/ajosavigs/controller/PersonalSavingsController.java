@@ -5,11 +5,15 @@ import com.ajosavings.ajosavigs.dto.request.PersonalSavingsDto;
 import com.ajosavings.ajosavigs.dto.request.TransactionRequest;
 import com.ajosavings.ajosavigs.exception.ResourceNotFoundException;
 import com.ajosavings.ajosavigs.models.PersonalSavings;
+import com.ajosavings.ajosavigs.models.Users;
 import com.ajosavings.ajosavigs.service.PersonalSavingsService;
 import com.ajosavings.ajosavigs.service.serviceImpl.PersonalSavingsServiceImpl;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -61,5 +65,14 @@ public class PersonalSavingsController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+    }
+
+    @GetMapping("/explore-savings")
+    public ResponseEntity<Page<PersonalSavings>> getAllSavings(@RequestParam(defaultValue = "0") int page,
+                                                         @RequestParam(defaultValue = "10") int size){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Users users = (Users) authentication.getPrincipal();
+        Page<PersonalSavings> allSavings = personalSavingsService.getAllSavings(users, page, size);
+        return ResponseEntity.status(HttpStatus.OK).body(allSavings);
     }
 }
