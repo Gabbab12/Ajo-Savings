@@ -14,6 +14,8 @@ import com.ajosavings.ajosavigs.service.PersonalSavingsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.velocity.exception.ResourceNotFoundException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -150,13 +152,6 @@ public class PersonalSavingsServiceImpl implements PersonalSavingsService {
             throw new RuntimeException("Failed to add money to savings wallet.", e);
         }
     }
-
-    @Override
-    public PersonalSavings viewGoal(Long savingId) {
-        return personalSavingsRepository.findById(savingId).orElseThrow(()-> new ResourceNotFoundException("Goal not found for saving ID: " + savingId));
-
-    }
-
     private void saveTransactionHistory(BigDecimal amount, String name, TransactionType type, Users user) {
         TransactionHistory transactionHistory = new TransactionHistory();
         transactionHistory.setAmount(amount);
@@ -166,5 +161,16 @@ public class PersonalSavingsServiceImpl implements PersonalSavingsService {
         transactionHistory.setUser(user);
         transactionHistoryRepository.save(transactionHistory);
     }
+
+    @Override
+    public PersonalSavings viewGoal(Long savingId) {
+        return personalSavingsRepository.findById(savingId).orElseThrow(()-> new ResourceNotFoundException("Goal not found for saving ID: " + savingId));
+    }
+    @Override
+    public Page<PersonalSavings> getAllSavings(Users user, int page, int size){
+        PageRequest pageRequest = PageRequest.of(page, size);
+        return personalSavingsRepository.findByUsers(user, pageRequest);
+    }
+
 
 }

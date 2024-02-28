@@ -148,7 +148,7 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
-    public ResponseEntity<?> verifyOtp(String transactionOtp, String username) {
+    public ResponseEntity<?> verifyDepositOtp(String transactionOtp, String username) {
 
         Users users = userRepository.findByUsername(username);
         Optional<TransactionOtp> otpOptional = otpRepository.findByUsername(users.getUsername());
@@ -173,11 +173,12 @@ public class TransactionServiceImpl implements TransactionService {
         otpRepository.save(transactionOtp1);
 
         updateWalletBalance(transactionOtp1.getAmount(), transactionOtp1.getUsers());
+
         userRepository.save(users);
 
         return new ResponseEntity<>("OTP verification successful", HttpStatus.OK);
-    }
 
+    }
 
     private String generateTransactionOtp() {
         return RandomStringUtils.randomNumeric(5);
@@ -190,14 +191,83 @@ public class TransactionServiceImpl implements TransactionService {
         userRepository.save(user);
     }
 
-    private void WalletBalance(BigDecimal amount, Users user) {
+    @Override
+    public ResponseEntity<String> withdraw(DepositDto depositDto) {
+        Users users = getAuthenticatedUser();
+        TransactionRequest transactionRequest = prepareTransactionRequest(users, depositDto);
+
+        TransactionHistory transactionHistory = new TransactionHistory();
+        transactionHistory.setName(users.getFirstName());
+        transactionHistory.setDate(LocalDate.now());
+        transactionHistory.setAmount(depositDto.getAmount());
+        transactionHistory.setType(TransactionType.DEBIT);
+        transactionHistory.setUser(users);
+
+
+        TransactionOtp transactionOtp = initializeTransactionAndHandleOTP(users, transactionRequest);
+        try {
+            // Send OTP via email
+            sendOtpViaEmail(users.getUsername(), transactionOtp.getTransactionOtp());
+
+            // Initiate transaction
+            PaystackResponse initiateResponse = initiateTransaction(transactionRequest);
+
+            // Process initiation response
+            if (initiateResponse != null && initiateResponse.getStatus()) {
+                // Save transaction history
+                saveTransactionHistory(transactionHistory);
+                return new ResponseEntity<>("Initiated withdrawal transaction successfully. OTP sent to your email.", HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>("Error initiating withdrawal", HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        } catch (WebClientResponseException ex) {
+            return new ResponseEntity<>("Error initiating withdrawal: " + ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Override
+    public ResponseEntity<?> verifyWithdrawalOtp(String transactionOtp, String username) {
+
+        Users users = userRepository.findByUsername(username);
+        Optional<TransactionOtp> otpOptional = otpRepository.findByUsername(users.getUsername());
+        if (otpOptional.isEmpty()) {
+            return new ResponseEntity<>("OTP not found or expired", HttpStatus.NOT_FOUND);
+        }
+
+        TransactionOtp transactionOtp1 = otpOptional.get();
+
+        if (!transactionOtp1.getIsValid()) {
+            return new ResponseEntity<>("OTP has already been used", HttpStatus.BAD_REQUEST);
+        }
+        if (!transactionOtp1.getTransactionOtp().equals(transactionOtp)) {
+            return new ResponseEntity<>("Invalid OTP", HttpStatus.BAD_REQUEST);
+        }
+        if (transactionOtp1.getExpiryTime().isBefore(LocalDateTime.now())) {
+            transactionOtp1.setIsValid(false);
+            otpRepository.save(transactionOtp1);
+            return new ResponseEntity<>("OTP has expired", HttpStatus.BAD_REQUEST);
+        }
+        transactionOtp1.setIsValid(false);
+        otpRepository.save(transactionOtp1);
+
+        walletBalance(transactionOtp1.getAmount(), transactionOtp1.getUsers());
+
+        userRepository.save(users);
+
+        return new ResponseEntity<>("OTP verification successful", HttpStatus.OK);
+
+    }
+
+    private void walletBalance(BigDecimal amount, Users user) {
         BigDecimal currentBalance = user.getGlobalWallet();
-        BigDecimal newBalance = currentBalance.subtract(amount);
+        BigDecimal newBalance = currentBalance.subtract(amount.abs());
         user.setGlobalWallet(newBalance);
         userRepository.save(user);
     }
+
+
     @Override
-    public Page<TransactionHistory> getTransactionHistory(Users users, int page, int size){
+    public Page<TransactionHistory> getTransactionHistory(Users users, int page, int size) {
         PageRequest pageRequest = PageRequest.of(page, size);
         return transactionHistoryRepository.findByUser(users, pageRequest);
     }
