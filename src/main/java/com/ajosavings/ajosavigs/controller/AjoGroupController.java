@@ -1,8 +1,11 @@
 package com.ajosavings.ajosavigs.controller;
 
 import com.ajosavings.ajosavigs.dto.request.AjoGroupDTO;
+import com.ajosavings.ajosavigs.dto.request.ContributionFlowDto;
+import com.ajosavings.ajosavigs.exception.ResourceNotFoundException;
 import com.ajosavings.ajosavigs.models.AjoGroup;
 import com.ajosavings.ajosavigs.models.Users;
+import com.ajosavings.ajosavigs.repository.AjoGroupRepository;
 import com.ajosavings.ajosavigs.service.serviceImpl.AjoGroupServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -19,6 +22,7 @@ import java.util.Optional;
 @RequestMapping("api/ajoGroup")
 public class AjoGroupController {
     private final AjoGroupServiceImpl ajoGroupService;
+    private final AjoGroupRepository ajoGroupRepository;
 
     @PostMapping("/create-ajoGroup")
     public ResponseEntity<AjoGroup> createAjoGroup(@RequestBody AjoGroupDTO ajoGroupDTO) {
@@ -54,4 +58,23 @@ public class AjoGroupController {
     public ResponseEntity<AjoGroup> makeContribution(@PathVariable Long ajoGroupId) {
         return ajoGroupService.makeContribution(ajoGroupId);
     }
+
+    @GetMapping("/{ajoGroupId}/contributions")
+    public ResponseEntity<List<ContributionFlowDto>> getContributions(@PathVariable Long ajoGroupId) throws ResourceNotFoundException {
+        AjoGroup ajoGroup = ajoGroupRepository.findById(ajoGroupId)
+                .orElseThrow(() -> new ResourceNotFoundException("AjoGroup with id " + ajoGroupId + " not found"));
+
+        List<ContributionFlowDto> contributions = ajoGroupService.generateContributionsFlow(ajoGroup);
+        return ResponseEntity.status(HttpStatus.OK).body(contributions);
+    }
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<AjoGroup>> getGroupsByUserId(@PathVariable Long userId) throws ResourceNotFoundException {
+        List<AjoGroup> groups = ajoGroupService.getGroupsByUserId(userId);
+        if (groups.isEmpty()) {
+            throw new ResourceNotFoundException("No groups found for user with ID: " + userId);
+        }
+        return new ResponseEntity<>(groups, HttpStatus.OK);
+    }
+
 }
