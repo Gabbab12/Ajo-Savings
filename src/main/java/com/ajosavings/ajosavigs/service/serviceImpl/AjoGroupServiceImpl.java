@@ -1,10 +1,13 @@
 package com.ajosavings.ajosavigs.service.serviceImpl;
 
 import com.ajosavings.ajosavigs.dto.request.AjoGroupDTO;
+import com.ajosavings.ajosavigs.dto.request.ContributionFlowDto;
+import com.ajosavings.ajosavigs.enums.PaymentPeriod;
 import com.ajosavings.ajosavigs.enums.TransactionType;
 import com.ajosavings.ajosavigs.exception.AccessDeniedException;
 import com.ajosavings.ajosavigs.exception.BadRequestException;
 import com.ajosavings.ajosavigs.exception.InsufficientFundsException;
+import com.ajosavings.ajosavigs.exception.UserNotFoundException;
 import com.ajosavings.ajosavigs.models.AjoGroup;
 import com.ajosavings.ajosavigs.models.TransactionHistory;
 import com.ajosavings.ajosavigs.models.Users;
@@ -14,15 +17,21 @@ import com.ajosavings.ajosavigs.repository.UserRepository;
 import com.ajosavings.ajosavigs.service.AjoGroupService;
 import lombok.RequiredArgsConstructor;
 import org.apache.velocity.exception.ResourceNotFoundException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -79,6 +88,7 @@ public class AjoGroupServiceImpl implements AjoGroupService {
 
         return availableSlots;
     }
+
     private List<Integer> generateAvailableSlots(int numberOfSlots) {
         List<Integer> availableSlots = new ArrayList<>();
         for (int i = 1; i <= numberOfSlots; i++) {
@@ -86,6 +96,7 @@ public class AjoGroupServiceImpl implements AjoGroupService {
         }
         return availableSlots;
     }
+
     @Override
     public ResponseEntity<AjoGroup> addUsers(Long groupId, Users user) {
         Optional<AjoGroup> optionalAjoGroup = ajoGroupRepository.findById(groupId);
@@ -131,36 +142,108 @@ public class AjoGroupServiceImpl implements AjoGroupService {
     }
 
     @Override
-    public ResponseEntity<AjoGroup> makeContribution(Long ajoGroupId){
+    public ResponseEntity<AjoGroup> makeContribution(Long ajoGroupId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Users users = (Users) authentication.getPrincipal();
 
         AjoGroup ajoGroup = ajoGroupRepository.findById(ajoGroupId).orElseThrow(() ->
-                new ResourceNotFoundException("AjoGroup with id "+ ajoGroupId + " does not exist"));
+                new ResourceNotFoundException("AjoGroup with id " + ajoGroupId + " does not exist"));
 
-        if(!ajoGroup.getUsers().contains(users)){
+        if (!ajoGroup.getUsers().contains(users)) {
             throw new AccessDeniedException("You are not a member of this Ajo Group", HttpStatus.NOT_ACCEPTABLE);
         }
         BigDecimal updatedGlobalWallet = users.getGlobalWallet().subtract(BigDecimal.valueOf(ajoGroup.getContributionAmount()));
-            if(updatedGlobalWallet.compareTo(BigDecimal.ZERO) < 0){
-                throw new InsufficientFundsException("Insufficient funds in your global wallet: " + users.getGlobalWallet(), HttpStatus.BAD_REQUEST);
-            }
+        if (updatedGlobalWallet.compareTo(BigDecimal.ZERO) < 0) {
+            throw new InsufficientFundsException("Insufficient funds in your global wallet: " + users.getGlobalWallet(), HttpStatus.BAD_REQUEST);
+        }
 
-            BigDecimal totalGroupSavings = users.getTotalGroupSavings().add(BigDecimal.valueOf(ajoGroup.getContributionAmount()));
-            users.setTotalGroupSavings(totalGroupSavings);
+        BigDecimal totalGroupSavings = users.getTotalGroupSavings().add(BigDecimal.valueOf(ajoGroup.getContributionAmount()));
+        users.setTotalGroupSavings(totalGroupSavings);
 
-            users.setGlobalWallet(updatedGlobalWallet);
-            userRepository.save(users);
+        users.setGlobalWallet(updatedGlobalWallet);
+        userRepository.save(users);
 
-            TransactionHistory transactionHistory = new TransactionHistory();
-            transactionHistory.setUser(users);
-            transactionHistory.setName(ajoGroup.getGroupName());
-            transactionHistory.setType(TransactionType.DEBIT);
-            transactionHistory.setAmount(BigDecimal.valueOf(ajoGroup.getContributionAmount()));
-            transactionHistory.setDate(LocalDate.now());
+        TransactionHistory transactionHistory = new TransactionHistory();
+        transactionHistory.setUser(users);
+        transactionHistory.setName(ajoGroup.getGroupName());
+        transactionHistory.setType(TransactionType.DEBIT);
+        transactionHistory.setAmount(BigDecimal.valueOf(ajoGroup.getContributionAmount()));
+        transactionHistory.setDate(LocalDate.now());
 
-            transactionHistoryRepository.save(transactionHistory);
+        transactionHistoryRepository.save(transactionHistory);
 
         return ResponseEntity.status(HttpStatus.OK).body(ajoGroup);
+    }
+    @Override
+    public List<ContributionFlowDto> generateContributionsFlow(AjoGroup ajoGroup) {
+        List<ContributionFlowDto> contributions = new ArrayList<>();
+        LocalDate currentDate = LocalDate.now();
+
+        for (Users user : ajoGroup.getUsers()) {
+            ContributionFlowDto contributionFlowDto = new ContributionFlowDto();
+            contributionFlowDto.setName(user.getFirstName() + " " + user.getLastName());
+            contributionFlowDto.setContributing(BigDecimal.valueOf(ajoGroup.getContributionAmount()));
+            contributionFlowDto.setWithdrawing(BigDecimal.ZERO);
+            contributionFlowDto.setFee(BigDecimal.ZERO);
+
+            int currentSlot = user.getAjoSlot();
+
+            // Check if the user's slot matches the current slot
+            if (currentSlot == calculateCurrentSlot(ajoGroup.getExpectedStartDate(), currentDate, ajoGroup.getPaymentPeriod())) {
+                double fees = 0.01;
+                BigDecimal withdrawingAmount = BigDecimal.valueOf(ajoGroup.getContributionAmount() * ajoGroup.getNumberOfParticipant());
+                BigDecimal feeAmount = withdrawingAmount.multiply(BigDecimal.valueOf(fees));
+                contributionFlowDto.setWithdrawing(withdrawingAmount);
+                contributionFlowDto.setFee(feeAmount);
+            }
+
+            contributionFlowDto.setRecentCashOut(calculateRecentCashOutDate(ajoGroup.getExpectedStartDate(), currentDate, ajoGroup.getPaymentPeriod(), currentSlot));
+            contributionFlowDto.setNextCashOut(calculateNextCashOutDate(ajoGroup.getExpectedStartDate(), currentDate, ajoGroup.getPaymentPeriod(), currentSlot));
+
+            contributions.add(contributionFlowDto);
+        }
+
+        return contributions;
+    }
+
+    private int calculateCurrentSlot(Date expectedStartDate, LocalDate currentDate, PaymentPeriod paymentPeriod) {
+        LocalDate startDate = expectedStartDate.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
+
+        long daysSinceStart = ChronoUnit.DAYS.between(startDate, currentDate);
+
+        return (int) (daysSinceStart / getSlotDuration(paymentPeriod)) + 1;
+    }
+
+    private LocalDate calculateRecentCashOutDate(Date expectedStartDate, LocalDate currentDate, PaymentPeriod paymentPeriod, int currentSlot) {
+        return calculateNextCashOutDate(expectedStartDate, currentDate, paymentPeriod, currentSlot - 1); // Subtract 1 to get the previous slot
+    }
+
+    private LocalDate calculateNextCashOutDate(Date expectedStartDate, LocalDate currentDate, PaymentPeriod paymentPeriod, int currentSlot) {
+        LocalDate startDate = expectedStartDate.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
+
+        return startDate.plusDays(getSlotDuration(paymentPeriod) * currentSlot);
+    }
+
+    private long getSlotDuration(PaymentPeriod paymentPeriod) {
+        return switch (paymentPeriod) {
+            case DAILY -> 1;
+            case WEEKLY -> 7;
+            case MONTHLY -> 30;
+        };
+    }
+
+    public List<AjoGroup> getGroupsByUserId(Long userId) {
+        return ajoGroupRepository.findAll().stream()
+                .filter(ajoGroup -> containsUserWithId(ajoGroup, userId))
+                .collect(Collectors.toList());
+    }
+
+    private boolean containsUserWithId(AjoGroup ajoGroup, Long userId) {
+        return ajoGroup.getUsers().stream()
+                .anyMatch(user -> user.getId().equals(userId));
     }
 }

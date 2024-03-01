@@ -1,6 +1,7 @@
 package com.ajosavings.ajosavigs.service;
 
 import com.ajosavings.ajosavigs.dto.request.AjoGroupDTO;
+import com.ajosavings.ajosavigs.dto.request.ContributionFlowDto;
 import com.ajosavings.ajosavigs.models.AjoGroup;
 import com.ajosavings.ajosavigs.models.Users;
 import org.springframework.http.ResponseEntity;
@@ -18,4 +19,6 @@ public interface AjoGroupService {
     Optional<AjoGroup> getAjoGroupDetails(Long groupId);
 
     ResponseEntity<AjoGroup> makeContribution(Long ajoGroupId);
+
+    List<ContributionFlowDto> generateContributionsFlow(AjoGroup ajoGroup);
 }
