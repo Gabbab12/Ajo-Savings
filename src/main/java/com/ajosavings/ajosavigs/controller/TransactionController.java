@@ -29,6 +29,7 @@ public class TransactionController {
 
     @PostMapping("/verify/deposit-transaction")
     public ResponseEntity<?> verifyDepositOtp(@RequestParam String otp, String username) {
+        System.out.println(otp + username);
         return transactionService.verifyDepositOtp(otp, username);
     }
 

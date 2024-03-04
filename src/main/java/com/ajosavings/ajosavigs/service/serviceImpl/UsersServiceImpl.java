@@ -59,6 +59,7 @@ public class UsersServiceImpl implements UsersService {
         user.setFirstName(signUpRequest.getFirstName());
         user.setLastName(signUpRequest.getLastName());
         user.setPhoneNumber(signUpRequest.getPhoneNumber());
+        user.setProfilePicture("https://res.cloudinary.com/dpfqbb9pl/image/upload/v1708720135/gender_neutral_avatar_ruxcpg.jpg");
         user.setRole(Role.USERS);
         log.info(String.valueOf(user));
         userRepository.save(user);
@@ -94,16 +95,18 @@ public class UsersServiceImpl implements UsersService {
 
     @Override
     public PasswordToken forgotPassword(String username) throws MessagingException {
-        Users user = userRepository.findByUsername(username);
-        if (user == null) {
+        Optional<Users> user = userRepository.findUsersByUsername(username);
+
+        if (user.isEmpty()) {
             throw new UserNotFoundException("User not found with this username: " + username, HttpStatus.NOT_FOUND);
         }
+
         PasswordToken passwordToken = new PasswordToken();
         passwordToken.setToken(generatePasswordToken());
-        passwordToken.setUsername(user.getUsername());
-        passwordToken.setUser(user);
+        passwordToken.setUsername(user.get().getUsername());
+        passwordToken.setUser(user.get());
         PasswordToken passwordToken1 = passwordTokenRepository.save(passwordToken);
-        emailService.sendForgotPasswordEmail(user.getUsername(), passwordToken);
+        emailService.sendForgotPasswordEmail(user.get().getUsername(), passwordToken);
         return passwordToken1;
     }
 
@@ -206,6 +209,18 @@ public class UsersServiceImpl implements UsersService {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @Override
+    public ResponseEntity<Users> getUser(String email) {
+        Users users = userRepository
+                .findByUsername(email);
+
+        return ResponseEntity.ok(
+               users
+        );
+    }
+
+
+
 
     @Override
     public void logout() {
@@ -218,6 +233,26 @@ public class UsersServiceImpl implements UsersService {
         }
         SecurityContextHolder.clearContext();
     }
+
+    @Override
+    public ResponseEntity<String> updateProfilePicture(String profilePicture, String username) {
+        Optional<Users> user = userRepository.findUsersByUsername(username);
+
+        if (user.isEmpty()) {
+            throw new UsernameNotFoundException("User not found with username: " + username);
+        }
+
+        user.get().setProfilePicture(profilePicture);
+
+        userRepository.save(user.get());
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(
+                        "Profile picture updated successfully"
+                );
+    }
+
     @Override
     public ResponseEntity<String> updateUserDetails(Long userId, ProfileUpdateDto profileUpdateDto) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

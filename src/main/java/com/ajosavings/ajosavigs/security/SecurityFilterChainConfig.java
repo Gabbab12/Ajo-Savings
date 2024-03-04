@@ -27,7 +27,7 @@ import static org.springframework.http.HttpMethod.POST;
 public class SecurityFilterChainConfig {
     private final AuthenticationProvider authenticationProvider;
     private final JwtFilterConfig filterConfiguration;
-//    private final CorsConfigurationSource corsConfigurationSource;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.cors(httpSecurityCorsConfigurer -> httpSecurityCorsConfigurer.configurationSource(corsConfigurationSource()));
@@ -51,14 +51,16 @@ public class SecurityFilterChainConfig {
                                 .requestMatchers("/api/v1/signup/**", "/api/v1/transaction/**","api/savings/**").permitAll()
 
                                 .requestMatchers(HttpMethod.POST, "/api/v1/signup/normal").permitAll()
+                                .requestMatchers("/api/v1/auth/**").permitAll()
+                                .requestMatchers("/api/v1/**").permitAll()
+                                .requestMatchers("/api/v1/signup/verify-otp").permitAll()
                                 .requestMatchers("/api/v1/auth/**", "/update/**", "api/ajoGroup/**").permitAll()
+                                .requestMatchers(POST,"registered-user","/logout").authenticated()
+                                .requestMatchers(HttpMethod.POST, "/api/v1/signup/normal", "api/v1/auth/forgot").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/api/v1/signup/google").permitAll()
+                                .requestMatchers(HttpMethod.POST, "api/v1/user/**").permitAll()
 
                 )
-//                .sessionManagement((session) ->
-//                                .requestMatchers(POST,"registered-user","/logout").authenticated()
-//                                .requestMatchers(HttpMethod.POST, "/api/v1/signup/normal", "api/v1/auth/forgot").permitAll()
-//                                .requestMatchers(HttpMethod.POST, "/api/v1/signup/google").permitAll())
-
                 .sessionManagement((session) ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider)
@@ -74,8 +76,8 @@ public class SecurityFilterChainConfig {
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowCredentials(true);
-        configuration.setAllowedOrigins(List.of("http://localhost:5174", "http://localhost:5173", "http://localhost:3000"));
-        configuration.setAllowedMethods(List.of("POST", "GET", "DELETE", "PUT"));
+        configuration.setAllowedOrigins(List.of("http://localhost:5174", "http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173"));
+        configuration.setAllowedMethods(List.of("POST", "GET", "DELETE", "PUT", "PATCH"));
         configuration.setAllowedHeaders(List.of("*"));
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

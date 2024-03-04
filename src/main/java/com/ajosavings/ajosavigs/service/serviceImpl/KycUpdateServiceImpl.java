@@ -4,22 +4,23 @@ import com.ajosavings.ajosavigs.dto.request.KycUpdateDTO;
 import com.ajosavings.ajosavigs.models.KYCUpdates;
 import com.ajosavings.ajosavigs.models.Users;
 import com.ajosavings.ajosavigs.repository.KycUpdateRepository;
+import com.ajosavings.ajosavigs.service.FileUpload;
 import com.ajosavings.ajosavigs.service.KycUpdateService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class KycUpdateServiceImpl implements KycUpdateService {
-
     private final KycUpdateRepository kycUpdateRepository;
 
     @Override
-    public KYCUpdates kycUpdates(KycUpdateDTO kycUpdateDTO){
+    public KYCUpdates kycUpdates(KycUpdateDTO kycUpdateDTO) throws IOException {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Users user = (Users) authentication.getPrincipal();

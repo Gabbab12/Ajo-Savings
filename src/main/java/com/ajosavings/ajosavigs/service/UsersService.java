@@ -20,9 +20,8 @@ public interface UsersService {
     ResponseEntity<String> changePassword(PasswordChangeDTO PasswordChangeDTO);
     boolean oldPasswordIsValid(Users users, String oldPassword);
     ResponseEntity<AuthenticationResponse> loginRegisteredUser(LoginRequest request);
-
+    ResponseEntity<Users> getUser(String email);
     void logout();
-
+    ResponseEntity<String> updateProfilePicture(String profilePicture, String username);
     ResponseEntity<String> updateUserDetails(Long userId, ProfileUpdateDto profileUpdateDto);
 }
-

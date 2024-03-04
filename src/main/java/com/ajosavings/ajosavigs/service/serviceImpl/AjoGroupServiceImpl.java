@@ -113,6 +113,7 @@ public class AjoGroupServiceImpl implements AjoGroupService {
         }
         return availableSlots;
     }
+
     private Integer assignSlotToUser(List<Integer> availableSlots) {
         if (availableSlots.isEmpty()) {
             throw new IllegalStateException("No available slots left in the group");
@@ -158,7 +159,6 @@ public class AjoGroupServiceImpl implements AjoGroupService {
     public ResponseEntity<List<AjoGroup>> getAllGroups() {
         List<AjoGroup> groups = ajoGroupRepository.findAll();
         return ResponseEntity.ok(groups);
-
     }
 
     @Override

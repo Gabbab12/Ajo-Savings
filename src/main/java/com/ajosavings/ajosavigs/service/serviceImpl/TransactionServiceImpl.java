@@ -57,6 +57,8 @@ public class TransactionServiceImpl implements TransactionService {
         // Retrieve authenticated user
         Users user = getAuthenticatedUser();
 
+        System.out.println(depositDto.getAmount());
+
         // Prepare transaction request
         TransactionRequest transactionRequest = prepareTransactionRequest(user, depositDto);
 
@@ -151,6 +153,7 @@ public class TransactionServiceImpl implements TransactionService {
     public ResponseEntity<?> verifyDepositOtp(String transactionOtp, String username) {
 
         Users users = userRepository.findByUsername(username);
+
         Optional<TransactionOtp> otpOptional = otpRepository.findByUsername(users.getUsername());
         if (otpOptional.isEmpty()) {
             return new ResponseEntity<>("OTP not found or expired", HttpStatus.NOT_FOUND);
