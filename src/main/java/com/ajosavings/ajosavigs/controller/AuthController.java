@@ -3,6 +3,7 @@ package com.ajosavings.ajosavigs.controller;
 import com.ajosavings.ajosavigs.dto.request.LoginRequest;
 import com.ajosavings.ajosavigs.dto.request.PasswordChangeDTO;
 import com.ajosavings.ajosavigs.dto.request.PasswordDTO;
+import com.ajosavings.ajosavigs.dto.request.ProfileUpdateDto;
 import com.ajosavings.ajosavigs.dto.response.AuthenticationResponse;
 import com.ajosavings.ajosavigs.exception.ResourceNotFoundException;
 import com.ajosavings.ajosavigs.exception.UserNotFoundException;
@@ -73,5 +74,10 @@ public class AuthController {
     @PostMapping("/change-password")
     public ResponseEntity<String> changePassword(@RequestBody PasswordChangeDTO passwordChangeDTO){
         return  usersService.changePassword(passwordChangeDTO);
+    }
+
+    @PutMapping("profile-update/{userId}")
+    public ResponseEntity<String> profileUpdate(@PathVariable Long userId, @RequestBody ProfileUpdateDto profileUpdateDto){
+       return usersService.updateUserDetails(userId, profileUpdateDto);
     }
 }
