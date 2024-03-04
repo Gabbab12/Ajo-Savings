@@ -13,6 +13,7 @@ import net.minidev.json.annotate.JsonIgnore;
 
 import java.time.LocalTime;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -60,9 +61,12 @@ public class AjoGroup extends AuditBaseEntity{
     @Column(name = "available_slot")
     private List<Integer> availableSlots;
 
-    @OneToMany(cascade = {CascadeType.ALL})
-    @JoinColumn(name = "ajoGroupId")
-    private Set<Users> users;
+    @ManyToMany(cascade = {CascadeType.ALL})
+    @JoinTable(
+            name = "user_ajo_group",
+            joinColumns = @JoinColumn(name = "ajo_group_id"),
+            inverseJoinColumns = @JoinColumn(name = "user_id"))
+    private Set<Users> users = new HashSet<>();
 
 }
 

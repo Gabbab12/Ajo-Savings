@@ -15,6 +15,7 @@ import com.ajosavings.ajosavigs.repository.AjoGroupRepository;
 import com.ajosavings.ajosavigs.repository.TransactionHistoryRepository;
 import com.ajosavings.ajosavigs.repository.UserRepository;
 import com.ajosavings.ajosavigs.service.AjoGroupService;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.apache.velocity.exception.ResourceNotFoundException;
 import org.springframework.data.domain.Page;
@@ -25,6 +26,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -40,18 +42,33 @@ public class AjoGroupServiceImpl implements AjoGroupService {
     private final AjoGroupRepository ajoGroupRepository;
     private final UserRepository userRepository;
     private final TransactionHistoryRepository transactionHistoryRepository;
+    private final EntityManager entityManager;
+
 
     @Override
+    @Transactional
     public ResponseEntity<AjoGroup> createAjoGroup(AjoGroupDTO ajoGroupDTO) {
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Users currentUser = (Users) authentication.getPrincipal();
+
         if (ajoGroupDTO.getNumberOfParticipant() <= 1) {
             throw new BadRequestException("Number of participants must be greater than 1", HttpStatus.BAD_REQUEST);
         }
         AjoGroup ajoGroup = mapToEntity(ajoGroupDTO);
 
-        if (ajoGroup.getUsers() == null) {
-            ajoGroup.setUsers(new HashSet<>());
-        }
+        currentUser = entityManager.merge(currentUser);
+
+        Set<Users> users = new HashSet<>();
+       users.add(currentUser);
+       ajoGroup.setUsers(users);
+
         List<Integer> availableSlots = generateAvailableSlots(ajoGroup.getNumberOfParticipant());
+        Integer assignedSlot = assignSlotToUser(availableSlots);
+
+        // Set assigned slot to the current user
+        currentUser.setAjoSlot(assignedSlot);
+
         ajoGroup.setAvailableSlots(availableSlots);
         ajoGroup.setTotalSlot(ajoGroup.getNumberOfParticipant());
         ajoGroup.setEstimatedCollection(ajoGroup.getNumberOfParticipant() * ajoGroup.getContributionAmount());
@@ -95,6 +112,14 @@ public class AjoGroupServiceImpl implements AjoGroupService {
             availableSlots.add(i);
         }
         return availableSlots;
+    }
+    private Integer assignSlotToUser(List<Integer> availableSlots) {
+        if (availableSlots.isEmpty()) {
+            throw new IllegalStateException("No available slots left in the group");
+        }
+        Integer assignedSlot = availableSlots.get(0);
+        availableSlots.remove(assignedSlot);
+        return assignedSlot;
     }
 
     @Override
