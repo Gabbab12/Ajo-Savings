@@ -36,6 +36,7 @@ public class Users extends AuditBaseEntity implements UserDetails {
     private String phoneNumber;
     @Column(nullable = false)
     private String password;
+    private String profilePicture;
     @Enumerated(EnumType.STRING)
     private Role role;
     private int ajoSlot;

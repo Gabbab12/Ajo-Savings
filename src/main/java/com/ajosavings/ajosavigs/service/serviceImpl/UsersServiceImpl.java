@@ -63,6 +63,7 @@ public class UsersServiceImpl implements UsersService {
         user.setFirstName(signUpRequest.getFirstName());
         user.setLastName(signUpRequest.getLastName());
         user.setPhoneNumber(signUpRequest.getPhoneNumber());
+        user.setProfilePicture("https://res.cloudinary.com/dpfqbb9pl/image/upload/v1708720135/gender_neutral_avatar_ruxcpg.jpg");
         user.setRole(Role.USERS);
         log.info(String.valueOf(user));
         userRepository.save(user);
@@ -236,6 +237,25 @@ public class UsersServiceImpl implements UsersService {
             System.out.println(user);
         }
         SecurityContextHolder.clearContext();
+    }
+
+    @Override
+    public ResponseEntity<String> updateProfilePicture(String profilePicture, String username) {
+        Optional<Users> user = userRepository.findUsersByUsername(username);
+
+        if (user.isEmpty()) {
+            throw new UsernameNotFoundException("User not found with username: " + username);
+        }
+
+        user.get().setProfilePicture(profilePicture);
+
+        userRepository.save(user.get());
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(
+                        "Profile picture updated successfully"
+                );
     }
 
 }

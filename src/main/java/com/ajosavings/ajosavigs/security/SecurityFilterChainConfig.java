@@ -58,6 +58,7 @@ public class SecurityFilterChainConfig {
                                 .requestMatchers(POST,"registered-user","/logout").authenticated()
                                 .requestMatchers(HttpMethod.POST, "/api/v1/signup/normal", "api/v1/auth/forgot").permitAll()
                                 .requestMatchers(HttpMethod.POST, "/api/v1/signup/google").permitAll()
+                                .requestMatchers(HttpMethod.POST, "api/v1/user/**").permitAll()
 
                 )
                 .sessionManagement((session) ->
@@ -76,7 +77,7 @@ public class SecurityFilterChainConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowCredentials(true);
         configuration.setAllowedOrigins(List.of("http://localhost:5174", "http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173"));
-        configuration.setAllowedMethods(List.of("POST", "GET", "DELETE", "PUT"));
+        configuration.setAllowedMethods(List.of("POST", "GET", "DELETE", "PUT", "PATCH"));
         configuration.setAllowedHeaders(List.of("*"));
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

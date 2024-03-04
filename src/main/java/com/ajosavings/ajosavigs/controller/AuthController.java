@@ -26,8 +26,6 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 public class AuthController {
 
-//    @Autowired
-//    private final UsersServiceImpl usersService;
     private final UsersService usersService;
 
     @PostMapping("/forgot")

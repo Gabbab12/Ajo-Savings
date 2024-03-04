@@ -25,4 +25,5 @@ public interface UsersService {
     ResponseEntity<AuthenticationResponse> loginRegisteredUser(LoginRequest request);
     ResponseEntity<Users> getUser(String email);
     void logout();
+    ResponseEntity<String> updateProfilePicture(String profilePicture, String username);
 }
