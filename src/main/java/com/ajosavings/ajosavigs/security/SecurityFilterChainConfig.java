@@ -18,6 +18,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
+import static org.springframework.http.HttpMethod.GET;
 import static org.springframework.http.HttpMethod.POST;
 
 @RequiredArgsConstructor
@@ -47,17 +48,18 @@ public class SecurityFilterChainConfig {
                                 .permitAll()
 
                                 .requestMatchers(POST,"/api/v1/auth/userReg").permitAll()
+                                .requestMatchers("/api/v1/signup/**", "/api/v1/transaction/**","api/savings/**").permitAll()
 
                                 .requestMatchers(HttpMethod.POST, "/api/v1/signup/normal").permitAll()
                                 .requestMatchers("/api/v1/auth/**").permitAll()
                                 .requestMatchers("/api/v1/**").permitAll()
                                 .requestMatchers("/api/v1/signup/verify-otp").permitAll()
-                )
-                .sessionManagement((session) ->
+                                .requestMatchers("/api/v1/auth/**", "/update/**", "api/ajoGroup/**").permitAll()
                                 .requestMatchers(POST,"registered-user","/logout").authenticated()
                                 .requestMatchers(HttpMethod.POST, "/api/v1/signup/normal", "api/v1/auth/forgot").permitAll()
-                                .requestMatchers(HttpMethod.POST, "/api/v1/signup/google").permitAll())
+                                .requestMatchers(HttpMethod.POST, "/api/v1/signup/google").permitAll()
 
+                )
                 .sessionManagement((session) ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider)

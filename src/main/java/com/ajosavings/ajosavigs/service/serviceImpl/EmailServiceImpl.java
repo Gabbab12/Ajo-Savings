@@ -7,9 +7,11 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
@@ -33,7 +35,7 @@ public class EmailServiceImpl implements EmailService {
     public void sendForgotPasswordEmail(String username, PasswordToken passwordToken) throws MessagingException {
         if (username == null) {
             // Throw a more descriptive exception for user not found
-            throw new UserNotFoundException("Username cannot be null when sending forgot password email.");
+            throw new UserNotFoundException("Username cannot be null when sending forgot password email.", HttpStatus.NOT_FOUND);
         }
         Context context = new Context();
         context.setVariable("passwordToken", passwordToken.getToken());
@@ -41,13 +43,19 @@ public class EmailServiceImpl implements EmailService {
         sendHTMLEmail(username, FORGOT_PASSWORD_SUBJECT, HTML_CONTEXT);
     }
     @Override
+    @Async
     public void sendEmail(String toEmail, String subject, String content) {
         SimpleMailMessage mailMessage = new SimpleMailMessage();
         mailMessage.setTo(toEmail);
         mailMessage.setSubject(subject);
         mailMessage.setText(content);
+        try{
+            javaMailSender.send(mailMessage);
 
-        javaMailSender.send(mailMessage);
+        }catch (Exception exe){
+            log.info("Error while sending email");
+        }
+
     }
     @Override
     public void sendHTMLEmail(String toEmail, String subject, String htmlContent) throws MessagingException {

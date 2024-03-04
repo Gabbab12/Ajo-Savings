@@ -1,17 +1,15 @@
 package com.ajosavings.ajosavigs.service.serviceImpl;
 
 
-
 import com.ajosavings.ajosavigs.configuration.JwtService;
 import com.ajosavings.ajosavigs.configuration.PasswordConfig;
 import com.ajosavings.ajosavigs.dto.request.LoginRequest;
+import com.ajosavings.ajosavigs.dto.request.PasswordChangeDTO;
 import com.ajosavings.ajosavigs.dto.request.PasswordDTO;
 import com.ajosavings.ajosavigs.dto.request.SignUpRequest;
 import com.ajosavings.ajosavigs.dto.response.AuthenticationResponse;
 import com.ajosavings.ajosavigs.enums.Role;
-import com.ajosavings.ajosavigs.exception.BadRequestException;
-import com.ajosavings.ajosavigs.exception.ResourceNotFoundException;
-import com.ajosavings.ajosavigs.exception.UserNotFoundException;
+import com.ajosavings.ajosavigs.exception.*;
 import com.ajosavings.ajosavigs.models.PasswordToken;
 import com.ajosavings.ajosavigs.models.Users;
 import com.ajosavings.ajosavigs.repository.PasswordTokenRepository;
@@ -32,6 +30,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -50,9 +49,9 @@ public class UsersServiceImpl implements UsersService {
     private final EmailServiceImpl emailService;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final PasswordEncoder passwordEncoder;
 
-
-
+    @Override
     public Users signUp(SignUpRequest signUpRequest) {
 
         if (!passwordConfig.validatePassword(signUpRequest.getPassword())) {
@@ -88,25 +87,29 @@ public class UsersServiceImpl implements UsersService {
         return user;
     }
 
-    public String generateOtpToken(){
+    public String generateOtpToken() {
         return RandomStringUtils.randomNumeric(6);
     }
-    public String generatePasswordToken(){
+
+    public String generatePasswordToken() {
         String alphanumerictoken = RandomStringUtils.randomAlphanumeric(16);
         return alphanumerictoken;
     }
+
     @Override
-    public PasswordToken forgotPassword(String username) throws MessagingException{
-        Users user = userRepository.findByUsername(username);
-        if (user == null) {
-            throw new UserNotFoundException("User not found with this username: " + username);
+    public PasswordToken forgotPassword(String username) throws MessagingException {
+        Optional<Users> user = userRepository.findUsersByUsername(username);
+
+        if (user.isEmpty()) {
+            throw new UserNotFoundException("User not found with this username: " + username, HttpStatus.NOT_FOUND);
         }
+
         PasswordToken passwordToken = new PasswordToken();
         passwordToken.setToken(generatePasswordToken());
-        passwordToken.setUsername(user.getUsername());
-        passwordToken.setUser(user);
+        passwordToken.setUsername(user.get().getUsername());
+        passwordToken.setUser(user.get());
         PasswordToken passwordToken1 = passwordTokenRepository.save(passwordToken);
-        emailService.sendForgotPasswordEmail(user.getUsername(), passwordToken);
+        emailService.sendForgotPasswordEmail(user.get().getUsername(), passwordToken);
         return passwordToken1;
     }
 
@@ -127,36 +130,64 @@ public class UsersServiceImpl implements UsersService {
         }
         return true;
     }
-@Override
-public ResponseEntity<String> resetPassword(String token, PasswordDTO passwordDTO) throws ResourceNotFoundException {
-    Optional<PasswordToken> passwordTokenOptional = passwordTokenRepository.findByTokenIgnoreCase(token);
 
-    if (passwordTokenOptional.isEmpty()) {
-        throw new ResourceNotFoundException("Invalid or expired reset password token");
-    }
-    PasswordToken passwordToken = passwordTokenOptional.get();
+    @Override
+    public ResponseEntity<String> resetPassword(String token, PasswordDTO passwordDTO) throws ResourceNotFoundException {
+        Optional<PasswordToken> passwordTokenOptional = passwordTokenRepository.findByTokenIgnoreCase(token);
 
-    // Check if the token is still valid and has not expired
-    if (!passwordToken.getIsValid() || passwordToken.getExpirationTime().isBefore(LocalDateTime.now())) {
-        throw new ResourceNotFoundException("Invalid or expired reset password token");
-    }
-    if (!passwordConfig.validatePassword(passwordDTO.getPassword())){
-        throw new BadRequestException("Invalid password format", HttpStatus.BAD_REQUEST);
-    }
-    if (Objects.equals(passwordDTO.getPassword(), passwordDTO.getConfirmPassword())) {
-        Users user = userRepository.findByUsername(passwordDTO.getUsername());
-        user.setPassword(new BCryptPasswordEncoder().encode(passwordDTO.getPassword()));
-        userRepository.save(user);
+        if (passwordTokenOptional.isEmpty()) {
+            throw new ResourceNotFoundException("Invalid or expired reset password token");
+        }
+        PasswordToken passwordToken = passwordTokenOptional.get();
 
-        // set the token isvalid to false after use
-        passwordToken.setIsValid(false);
-        passwordTokenRepository.save(passwordToken);
+        // Check if the token is still valid and has not expired
+        if (!passwordToken.getIsValid() || passwordToken.getExpirationTime().isBefore(LocalDateTime.now())) {
+            throw new ResourceNotFoundException("Invalid or expired reset password token");
+        }
+        if (!passwordConfig.validatePassword(passwordDTO.getPassword())) {
+            throw new BadRequestException("Invalid password format", HttpStatus.BAD_REQUEST);
+        }
+        if (Objects.equals(passwordDTO.getPassword(), passwordDTO.getConfirmPassword())) {
+            Users user = userRepository.findByUsername(passwordDTO.getUsername());
+            user.setPassword(new BCryptPasswordEncoder().encode(passwordDTO.getPassword()));
+            userRepository.save(user);
+
+            // set the token isvalid to false after use
+            passwordToken.setIsValid(false);
+            passwordTokenRepository.save(passwordToken);
         }
 
-    return new ResponseEntity<>("Password successfully reset", HttpStatus.OK);
+        return new ResponseEntity<>("Password successfully reset", HttpStatus.OK);
     }
 
-  
+    @Override
+    public ResponseEntity<String> changePassword(PasswordChangeDTO PasswordChangeDTO) {
+        Optional<Users> targetUser = userRepository.findById(PasswordChangeDTO.getUserId());
+        if (targetUser.isEmpty()) {
+            throw new UserNotFoundException("User not found", HttpStatus.NOT_FOUND);
+        }
+        Users users = targetUser.get();
+        if (!oldPasswordIsValid(users, PasswordChangeDTO.getOldPassword())) {
+            throw new IncorrectOldPasswordException("Incorrect old password!");
+        }
+        if (!PasswordConfig.isValid(PasswordChangeDTO.getNewPassword())) {
+            throw new BadRequestException("Invalid password format", HttpStatus.BAD_REQUEST);
+        }
+        if (!Objects.equals(PasswordChangeDTO.getNewPassword(), PasswordChangeDTO.getConfirmNewPassword())) {
+            throw new PasswordMismatchException("Password does not match!");
+        }
+        users.setPassword(passwordEncoder.encode(PasswordChangeDTO.getNewPassword()));
+        userRepository.save(users);
+
+        return new ResponseEntity<>("Password changed successfully", HttpStatus.OK);
+    }
+
+    @Override
+    public boolean oldPasswordIsValid(Users user, String oldPassword) {
+        return passwordEncoder.matches(oldPassword, user.getPassword());
+    }
+
+
     @Override
     public ResponseEntity<AuthenticationResponse> loginRegisteredUser(LoginRequest request) {
         try {
@@ -174,8 +205,26 @@ public ResponseEntity<String> resetPassword(String token, PasswordDTO passwordDT
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + request.getUsername()));
 
         String jwtToken = jwtService.generateToken(users);
-        return new ResponseEntity<>(new AuthenticationResponse(jwtToken), HttpStatus.OK);
+
+        AuthenticationResponse response = new AuthenticationResponse();
+        response.setToken(jwtToken);
+        response.setUser(users);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
+    @Override
+    public ResponseEntity<Users> getUser(String email) {
+        Users users = userRepository
+                .findByUsername(email);
+
+        return ResponseEntity.ok(
+               users
+        );
+    }
+
+
+
 
     @Override
     public void logout() {

@@ -1,11 +1,13 @@
 package com.ajosavings.ajosavigs.controller;
 
 import com.ajosavings.ajosavigs.dto.request.LoginRequest;
+import com.ajosavings.ajosavigs.dto.request.PasswordChangeDTO;
 import com.ajosavings.ajosavigs.dto.request.PasswordDTO;
 import com.ajosavings.ajosavigs.dto.response.AuthenticationResponse;
 import com.ajosavings.ajosavigs.exception.ResourceNotFoundException;
 import com.ajosavings.ajosavigs.exception.UserNotFoundException;
 import com.ajosavings.ajosavigs.models.PasswordToken;
+import com.ajosavings.ajosavigs.models.Users;
 import com.ajosavings.ajosavigs.service.UsersService;
 import com.ajosavings.ajosavigs.service.serviceImpl.UsersServiceImpl;
 import jakarta.mail.MessagingException;
@@ -24,8 +26,9 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 public class AuthController {
 
-    @Autowired
-    private final UsersServiceImpl usersService;
+//    @Autowired
+//    private final UsersServiceImpl usersService;
+    private final UsersService usersService;
 
     @PostMapping("/forgot")
     public ResponseEntity<String> forgotPassword(@RequestParam String username) {
@@ -68,5 +71,15 @@ public class AuthController {
     @PostMapping("/logout")
     public void logout() {
         usersService.logout();
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<String> changePassword(@RequestBody PasswordChangeDTO passwordChangeDTO){
+        return  usersService.changePassword(passwordChangeDTO);
+    }
+
+    @GetMapping("/users")
+    public ResponseEntity<Users> getUser(@RequestParam String email) {
+        return usersService.getUser(email);
     }
 }

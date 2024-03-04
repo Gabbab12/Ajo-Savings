@@ -37,6 +37,7 @@ public class KycUpdateServiceImpl implements KycUpdateService {
         kycUpdates.setIdentificationNumber(kycUpdateDTO.getIdentificationNumber());
         kycUpdates.setUploadIdentificationDocument(kycUpdateDTO.getUploadIdentificationDocument());
         kycUpdates.setUploadProofOfAddress(kycUpdateDTO.getUploadProofOfAddress());
+        kycUpdates.setUsers(user);
 
         kycUpdateRepository.save(kycUpdates);
         return kycUpdates;
