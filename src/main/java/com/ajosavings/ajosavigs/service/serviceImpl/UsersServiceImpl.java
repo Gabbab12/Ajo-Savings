@@ -3,10 +3,7 @@ package com.ajosavings.ajosavigs.service.serviceImpl;
 
 import com.ajosavings.ajosavigs.configuration.JwtService;
 import com.ajosavings.ajosavigs.configuration.PasswordConfig;
-import com.ajosavings.ajosavigs.dto.request.LoginRequest;
-import com.ajosavings.ajosavigs.dto.request.PasswordChangeDTO;
-import com.ajosavings.ajosavigs.dto.request.PasswordDTO;
-import com.ajosavings.ajosavigs.dto.request.SignUpRequest;
+import com.ajosavings.ajosavigs.dto.request.*;
 import com.ajosavings.ajosavigs.dto.response.AuthenticationResponse;
 import com.ajosavings.ajosavigs.enums.Role;
 import com.ajosavings.ajosavigs.exception.*;
@@ -32,7 +29,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
@@ -188,7 +184,6 @@ public class UsersServiceImpl implements UsersService {
         return passwordEncoder.matches(oldPassword, user.getPassword());
     }
 
-
     @Override
     public ResponseEntity<AuthenticationResponse> loginRegisteredUser(LoginRequest request) {
         try {
@@ -258,4 +253,35 @@ public class UsersServiceImpl implements UsersService {
                 );
     }
 
+    @Override
+    public ResponseEntity<String> updateUserDetails(Long userId, ProfileUpdateDto profileUpdateDto) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication required.");
+        }
+        Users authenticatedUser = (Users) authentication.getPrincipal();
+
+        if (!authenticatedUser.getId().equals(userId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You are not authorized to update this profile.");
+        }
+
+        Optional<Users> optionalUser = userRepository.findById(userId);
+        if (optionalUser.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found.");
+        }
+
+        Users user = optionalUser.get();
+        if (!user.getUsername().equals(authenticatedUser.getUsername())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You are not allowed to edit your username.");
+        }
+
+        user.setFirstName(profileUpdateDto.getFirstName());
+        user.setLastName(profileUpdateDto.getLastName());
+        user.setPhoneNumber(profileUpdateDto.getPhoneNumber());
+
+        userRepository.save(user);
+        log.info(String.valueOf(user));
+
+        return ResponseEntity.status(HttpStatus.OK).body("Profile updated successfully.");
+    }
 }

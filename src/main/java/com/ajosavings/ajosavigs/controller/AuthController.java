@@ -3,6 +3,7 @@ package com.ajosavings.ajosavigs.controller;
 import com.ajosavings.ajosavigs.dto.request.LoginRequest;
 import com.ajosavings.ajosavigs.dto.request.PasswordChangeDTO;
 import com.ajosavings.ajosavigs.dto.request.PasswordDTO;
+import com.ajosavings.ajosavigs.dto.request.ProfileUpdateDto;
 import com.ajosavings.ajosavigs.dto.response.AuthenticationResponse;
 import com.ajosavings.ajosavigs.exception.ResourceNotFoundException;
 import com.ajosavings.ajosavigs.exception.UserNotFoundException;
@@ -79,5 +80,10 @@ public class AuthController {
     @GetMapping("/users")
     public ResponseEntity<Users> getUser(@RequestParam String email) {
         return usersService.getUser(email);
+    }
+
+    @PutMapping("profile-update/{userId}")
+    public ResponseEntity<String> profileUpdate(@PathVariable Long userId, @RequestBody ProfileUpdateDto profileUpdateDto){
+       return usersService.updateUserDetails(userId, profileUpdateDto);
     }
 }

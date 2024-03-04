@@ -1,9 +1,6 @@
 package com.ajosavings.ajosavigs.service;
 
-import com.ajosavings.ajosavigs.dto.request.LoginRequest;
-import com.ajosavings.ajosavigs.dto.request.PasswordChangeDTO;
-import com.ajosavings.ajosavigs.dto.request.PasswordDTO;
-import com.ajosavings.ajosavigs.dto.request.SignUpRequest;
+import com.ajosavings.ajosavigs.dto.request.*;
 import com.ajosavings.ajosavigs.dto.response.AuthenticationResponse;
 import com.ajosavings.ajosavigs.exception.ResourceNotFoundException;
 import com.ajosavings.ajosavigs.models.PasswordToken;
@@ -26,4 +23,5 @@ public interface UsersService {
     ResponseEntity<Users> getUser(String email);
     void logout();
     ResponseEntity<String> updateProfilePicture(String profilePicture, String username);
+    ResponseEntity<String> updateUserDetails(Long userId, ProfileUpdateDto profileUpdateDto);
 }
