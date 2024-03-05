@@ -89,8 +89,7 @@ public class UsersServiceImpl implements UsersService {
     }
 
     public String generatePasswordToken() {
-        String alphanumerictoken = RandomStringUtils.randomAlphanumeric(16);
-        return alphanumerictoken;
+        return RandomStringUtils.randomAlphanumeric(16);
     }
 
     @Override
@@ -218,9 +217,6 @@ public class UsersServiceImpl implements UsersService {
                users
         );
     }
-
-
-
 
     @Override
     public void logout() {
