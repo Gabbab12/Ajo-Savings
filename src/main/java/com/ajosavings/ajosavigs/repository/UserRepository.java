@@ -1,5 +1,6 @@
 package com.ajosavings.ajosavigs.repository;
 
+import com.ajosavings.ajosavigs.enums.Role;
 import com.ajosavings.ajosavigs.models.AjoGroup;
 import com.ajosavings.ajosavigs.models.Users;
 import jakarta.validation.constraints.Email;
@@ -17,4 +18,7 @@ public interface UserRepository extends JpaRepository<Users, Long> {
     Users findByUsername(String username);
 
     Optional<Users> findUsersByUsername(String username);
+
+    boolean existsByRole(Role role);
+
 }
