@@ -7,7 +7,6 @@ import com.ajosavings.ajosavigs.enums.TransactionType;
 import com.ajosavings.ajosavigs.exception.AccessDeniedException;
 import com.ajosavings.ajosavigs.exception.BadRequestException;
 import com.ajosavings.ajosavigs.exception.InsufficientFundsException;
-import com.ajosavings.ajosavigs.exception.UserNotFoundException;
 import com.ajosavings.ajosavigs.models.AjoGroup;
 import com.ajosavings.ajosavigs.models.TransactionHistory;
 import com.ajosavings.ajosavigs.models.Users;
@@ -17,14 +16,13 @@ import com.ajosavings.ajosavigs.repository.UserRepository;
 import com.ajosavings.ajosavigs.service.AjoGroupService;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.velocity.exception.ResourceNotFoundException;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,6 +35,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AjoGroupServiceImpl implements AjoGroupService {
 
     private final AjoGroupRepository ajoGroupRepository;
@@ -260,15 +259,28 @@ public class AjoGroupServiceImpl implements AjoGroupService {
             case MONTHLY -> 30;
         };
     }
-
+    @Override
     public List<AjoGroup> getGroupsByUserId(Long userId) {
         return ajoGroupRepository.findAll().stream()
                 .filter(ajoGroup -> containsUserWithId(ajoGroup, userId))
                 .collect(Collectors.toList());
     }
-
     private boolean containsUserWithId(AjoGroup ajoGroup, Long userId) {
         return ajoGroup.getUsers().stream()
                 .anyMatch(user -> user.getId().equals(userId));
+    }
+    @Override
+    public ResponseEntity<Long> getTotalSavingGroups() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated()) {
+            for (GrantedAuthority authority : authentication.getAuthorities()) {
+                if (authority.getAuthority().equals("ADMIN")) {
+                    long totalCount = ajoGroupRepository.count();
+                    log.info(String.valueOf(totalCount));
+                    return ResponseEntity.ok(totalCount);
+                }
+            }
+        }
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
 }

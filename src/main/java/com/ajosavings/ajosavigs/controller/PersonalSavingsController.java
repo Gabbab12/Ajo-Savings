@@ -12,11 +12,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-
-import java.math.BigDecimal;
 
 @RestController
 @RequiredArgsConstructor
@@ -24,8 +23,6 @@ import java.math.BigDecimal;
 public class PersonalSavingsController {
 
     private final PersonalSavingsServiceImpl savingsService;
-    private final PersonalSavingsService personalSavingsService;
-
     @PostMapping("create")
     public ResponseEntity<PersonalSavings> createSaving(@RequestBody PersonalSavingsDto personalSavingsDto){
         try{
@@ -46,7 +43,7 @@ public class PersonalSavingsController {
     @PostMapping("/{personalSavingsId}/add-money")
     public ResponseEntity<String> addMoneyToSavings(@PathVariable Long personalSavingsId, @RequestBody DepositDto depositDto) {
         try {
-            personalSavingsService.addMoneyToSavings(personalSavingsId, depositDto.getAmount());
+            savingsService.addMoneyToSavings(personalSavingsId, depositDto.getAmount());
             return ResponseEntity.ok("Money successfully added to savings wallet.");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to add money to savings wallet.");
@@ -56,7 +53,7 @@ public class PersonalSavingsController {
     @GetMapping("/{savingId}/goal")
     public ResponseEntity<PersonalSavings> viewGoal(@PathVariable Long savingId) {
         try {
-            PersonalSavings userGoal = personalSavingsService.viewGoal(savingId);
+            PersonalSavings userGoal = savingsService.viewGoal(savingId);
             if (userGoal == null) {
                 return ResponseEntity.notFound().build();
             } else {
@@ -66,13 +63,12 @@ public class PersonalSavingsController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-
     @GetMapping("/explore-savings")
     public ResponseEntity<Page<PersonalSavings>> getAllSavings(@RequestParam(defaultValue = "0") int page,
                                                          @RequestParam(defaultValue = "10") int size){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Users users = (Users) authentication.getPrincipal();
-        Page<PersonalSavings> allSavings = personalSavingsService.getAllSavings(users, page, size);
+        Page<PersonalSavings> allSavings = savingsService.getAllSavings(users, page, size);
         return ResponseEntity.status(HttpStatus.OK).body(allSavings);
     }
 }

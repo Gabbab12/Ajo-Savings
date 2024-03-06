@@ -9,5 +9,5 @@ import java.util.List;
 @Repository
 public interface AjoGroupRepository extends JpaRepository<AjoGroup, Long> {
     List<AjoGroup> findByUsersId(Long userId);
-
+    long count();
 }

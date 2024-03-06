@@ -2,14 +2,17 @@ package com.ajosavings.ajosavigs.controller;
 
 import com.ajosavings.ajosavigs.dto.request.AjoGroupDTO;
 import com.ajosavings.ajosavigs.dto.request.ContributionFlowDto;
+import com.ajosavings.ajosavigs.enums.Role;
 import com.ajosavings.ajosavigs.exception.ResourceNotFoundException;
 import com.ajosavings.ajosavigs.models.AjoGroup;
 import com.ajosavings.ajosavigs.models.Users;
 import com.ajosavings.ajosavigs.repository.AjoGroupRepository;
 import com.ajosavings.ajosavigs.service.serviceImpl.AjoGroupServiceImpl;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +23,7 @@ import java.util.Optional;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("api/ajoGroup")
+@Slf4j
 public class AjoGroupController {
     private final AjoGroupServiceImpl ajoGroupService;
     private final AjoGroupRepository ajoGroupRepository;
@@ -76,5 +80,4 @@ public class AjoGroupController {
         }
         return new ResponseEntity<>(groups, HttpStatus.OK);
     }
-
 }
