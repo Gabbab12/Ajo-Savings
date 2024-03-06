@@ -30,6 +30,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.Optional;
@@ -278,5 +279,10 @@ public class UsersServiceImpl implements UsersService {
         log.info(String.valueOf(user));
 
         return ResponseEntity.status(HttpStatus.OK).body("Profile updated successfully.");
+    }
+
+    @Override
+    public int getTotalNewRegistrations(LocalDate startDate, LocalDate endDate) {
+        return userRepository.countByRegistrationDateBetween(startDate, endDate);
     }
 }

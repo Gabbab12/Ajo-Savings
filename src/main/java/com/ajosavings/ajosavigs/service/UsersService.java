@@ -10,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+
 @Service
 public interface UsersService {
     Users signUp(SignUpRequest signUpRequest);
@@ -24,4 +26,7 @@ public interface UsersService {
     void logout();
     ResponseEntity<String> updateProfilePicture(String profilePicture, String username);
     ResponseEntity<String> updateUserDetails(ProfileUpdateDto profileUpdateDto);
+
+    int getTotalNewRegistrations(LocalDate startDate, LocalDate endDate);
+
 }

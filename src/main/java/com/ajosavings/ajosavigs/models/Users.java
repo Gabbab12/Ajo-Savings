@@ -13,6 +13,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 
@@ -44,7 +45,7 @@ public class Users extends AuditBaseEntity implements UserDetails {
     private BigDecimal globalWallet = BigDecimal.ZERO;
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal totalGroupSavings = BigDecimal.ZERO;
-
+    private LocalDate registrationDate;
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority(role.name()));
