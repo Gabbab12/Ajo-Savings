@@ -82,8 +82,8 @@ public class AuthController {
         return usersService.getUser(email);
     }
 
-    @PutMapping("profile-update/{userId}")
-    public ResponseEntity<String> profileUpdate(@PathVariable Long userId, @RequestBody ProfileUpdateDto profileUpdateDto){
-       return usersService.updateUserDetails(userId, profileUpdateDto);
+    @PutMapping("profile-update")
+    public ResponseEntity<String> profileUpdate(@RequestBody ProfileUpdateDto profileUpdateDto){
+       return usersService.updateUserDetails(profileUpdateDto);
     }
 }

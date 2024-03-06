@@ -23,5 +23,5 @@ public interface UsersService {
     ResponseEntity<Users> getUser(String email);
     void logout();
     ResponseEntity<String> updateProfilePicture(String profilePicture, String username);
-    ResponseEntity<String> updateUserDetails(Long userId, ProfileUpdateDto profileUpdateDto);
+    ResponseEntity<String> updateUserDetails(ProfileUpdateDto profileUpdateDto);
 }
