@@ -1,6 +1,7 @@
 package com.ajosavings.ajosavigs.security;
 
 import com.ajosavings.ajosavigs.configuration.JwtFilterConfig;
+import com.ajosavings.ajosavigs.enums.Role;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -59,6 +60,7 @@ public class SecurityFilterChainConfig {
                                 .requestMatchers(HttpMethod.POST, "/api/v1/signup/normal", "api/v1/auth/forgot").permitAll()
                                 .requestMatchers(HttpMethod.POST, "/api/v1/signup/google").permitAll()
                                 .requestMatchers(HttpMethod.POST, "api/v1/user/**").permitAll()
+                                .requestMatchers(HttpMethod.GET, "api/v1/admin/**").hasRole("ADMIN")
 
                 )
                 .sessionManagement((session) ->

@@ -5,6 +5,7 @@ import com.ajosavings.ajosavigs.models.PersonalSavings;
 import com.ajosavings.ajosavigs.models.Users;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 
 import java.math.BigDecimal;
 
@@ -18,4 +19,6 @@ public interface PersonalSavingsService {
     PersonalSavings viewGoal(Long savingId);
 
     Page<PersonalSavings> getAllSavings(Users user, int page, int size);
+
+    ResponseEntity<Double> getTotalAmountSaved(Authentication authentication);
 }

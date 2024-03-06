@@ -21,4 +21,8 @@ public interface AjoGroupService {
     ResponseEntity<AjoGroup> makeContribution(Long ajoGroupId);
 
     List<ContributionFlowDto> generateContributionsFlow(AjoGroup ajoGroup);
+
+    List<AjoGroup> getGroupsByUserId(Long userId);
+
+    ResponseEntity<Long> getTotalSavingGroups();
 }

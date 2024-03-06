@@ -5,6 +5,7 @@ import com.ajosavings.ajosavigs.models.TransactionHistory;
 import com.ajosavings.ajosavigs.models.Users;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 
 public interface TransactionService {
 
@@ -19,4 +20,6 @@ public interface TransactionService {
     ResponseEntity<String> withdraw(DepositDto depositDto);
 
     Page<TransactionHistory> getTransactionHistory(Users users, int page, int size);
+
+    ResponseEntity<Double> getTotalAmountWithdrawn(Authentication authentication);
 }

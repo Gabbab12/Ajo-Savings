@@ -21,6 +21,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
@@ -31,6 +32,7 @@ import reactor.core.publisher.Mono;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -273,6 +275,22 @@ public class TransactionServiceImpl implements TransactionService {
     public Page<TransactionHistory> getTransactionHistory(Users users, int page, int size) {
         PageRequest pageRequest = PageRequest.of(page, size);
         return transactionHistoryRepository.findByUser(users, pageRequest);
+    }
+    @Override
+    public ResponseEntity<Double> getTotalAmountWithdrawn(Authentication authentication){
+        if (authentication != null && authentication.isAuthenticated()) {
+            for (GrantedAuthority authority : authentication.getAuthorities()) {
+                if (authority.getAuthority().equals("ADMIN")) {
+                    List<TransactionHistory> debitTransaction = transactionHistoryRepository.findAllByType(TransactionType.DEBIT);
+                    double totalAmountWithdrawn = 0.0;
+                    for (TransactionHistory transaction : debitTransaction){
+                        totalAmountWithdrawn += transaction.getAmount().doubleValue();
+                    }
+                    return ResponseEntity.ok(totalAmountWithdrawn);
+                }
+            }
+        }
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
 
 }
