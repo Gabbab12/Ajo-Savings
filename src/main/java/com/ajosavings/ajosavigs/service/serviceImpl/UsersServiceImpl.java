@@ -250,26 +250,25 @@ public class UsersServiceImpl implements UsersService {
     }
 
     @Override
-    public ResponseEntity<String> updateUserDetails(Long userId, ProfileUpdateDto profileUpdateDto) {
+    public ResponseEntity<String> updateUserDetails(ProfileUpdateDto profileUpdateDto) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication required.");
         }
+
         Users authenticatedUser = (Users) authentication.getPrincipal();
 
-        if (!authenticatedUser.getId().equals(userId)) {
+        if (!authenticatedUser.getUsername().equals(profileUpdateDto.getUsername())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You are not authorized to update this profile.");
         }
 
-        Optional<Users> optionalUser = userRepository.findById(userId);
+        Optional<Users> optionalUser = userRepository.findUsersByUsername(profileUpdateDto.getUsername());
+
         if (optionalUser.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found.");
         }
 
         Users user = optionalUser.get();
-        if (!user.getUsername().equals(authenticatedUser.getUsername())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You are not allowed to edit your username.");
-        }
 
         user.setFirstName(profileUpdateDto.getFirstName());
         user.setLastName(profileUpdateDto.getLastName());
