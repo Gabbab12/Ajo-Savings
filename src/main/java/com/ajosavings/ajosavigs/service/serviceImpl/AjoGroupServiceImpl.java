@@ -28,6 +28,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -308,11 +310,14 @@ public class AjoGroupServiceImpl implements AjoGroupService {
 
 
     @Override
-    public ResponseEntity<Long> getTotalAjoGroups(Authentication authentication) {
+    public ResponseEntity<Long> getTotalAjoGroups(Authentication authentication, LocalDate date) {
         if (authentication != null && authentication.isAuthenticated()) {
         for (GrantedAuthority authority : authentication.getAuthorities()) {
             if (authority.getAuthority().equals("ADMIN")) {
-                long totalCount = ajoGroupRepository.count();
+                LocalDateTime startOfDay = date.atStartOfDay();
+                LocalDateTime endOfDay = date.atTime(LocalTime.MAX);
+
+                long totalCount = ajoGroupRepository.countByCreatedAtBetween(startOfDay, endOfDay);
                 return ResponseEntity.ok(totalCount);
             }
         }

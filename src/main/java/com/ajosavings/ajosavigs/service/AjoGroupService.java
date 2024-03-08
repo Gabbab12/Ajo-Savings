@@ -7,6 +7,7 @@ import com.ajosavings.ajosavigs.models.Users;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -29,7 +30,7 @@ public interface AjoGroupService {
 
     ResponseEntity<Double> getTotalContributions(Authentication authentication);
 
-    ResponseEntity<Long> getTotalAjoGroups(Authentication authentication);
 
+    ResponseEntity<Long> getTotalAjoGroups(Authentication authentication, LocalDate date);
 }
 
