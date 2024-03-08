@@ -28,4 +28,8 @@ public interface AjoGroupService {
     ResponseEntity<Long> getTotalSavingGroups();
 
     ResponseEntity<Double> getTotalContributions(Authentication authentication);
+
+    ResponseEntity<Long> getTotalAjoGroups(Authentication authentication);
+
 }
+
