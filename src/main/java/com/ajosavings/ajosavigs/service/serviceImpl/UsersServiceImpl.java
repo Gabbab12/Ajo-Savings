@@ -23,6 +23,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -278,5 +279,18 @@ public class UsersServiceImpl implements UsersService {
         log.info(String.valueOf(user));
 
         return ResponseEntity.status(HttpStatus.OK).body("Profile updated successfully.");
+    }
+    @Override
+    public ResponseEntity<Long> getAllUsers(Authentication authentication){
+        if (authentication != null && authentication.isAuthenticated()){
+            for (GrantedAuthority authority : authentication.getAuthorities()){
+                if (authority.getAuthority().equals("ADMIN")){
+                    long getTotalUsers = userRepository.count();
+                    log.info(String.valueOf(getTotalUsers));
+                    return ResponseEntity.status(HttpStatus.OK).body(getTotalUsers);
+                }
+            }
+        }
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
 }

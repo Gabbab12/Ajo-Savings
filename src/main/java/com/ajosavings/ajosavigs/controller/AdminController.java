@@ -3,6 +3,7 @@ package com.ajosavings.ajosavigs.controller;
 import com.ajosavings.ajosavigs.service.serviceImpl.AjoGroupServiceImpl;
 import com.ajosavings.ajosavigs.service.serviceImpl.PersonalSavingsServiceImpl;
 import com.ajosavings.ajosavigs.service.serviceImpl.TransactionServiceImpl;
+import com.ajosavings.ajosavigs.service.serviceImpl.UsersServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,6 +21,7 @@ public class AdminController {
     private final PersonalSavingsServiceImpl savingsService;
     private final AjoGroupServiceImpl ajoGroupService;
     private final TransactionServiceImpl transactionService;
+    private final UsersServiceImpl usersService;
 
     @GetMapping("/total-amount-saved")
     public ResponseEntity<Double> getTotalAmountSaved(Authentication authentication){
@@ -33,5 +35,14 @@ public class AdminController {
     @GetMapping("/total-amount-withdrawn")
     public ResponseEntity<Double> getTotalAmountWithdrawn(Authentication authentication) {
         return transactionService.getTotalAmountWithdrawn(authentication);
+    }
+    @GetMapping("/total-contributions")
+    public ResponseEntity<Double> getTotalContributions(Authentication authentication){
+        return ajoGroupService.getTotalContributions(authentication);
+    }
+
+    @GetMapping("/get-all-users")
+    public ResponseEntity<Long> getAllUsersNumber(Authentication authentication){
+        return usersService.getAllUsers(authentication);
     }
 }
