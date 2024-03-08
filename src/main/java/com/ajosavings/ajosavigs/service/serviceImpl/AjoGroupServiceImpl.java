@@ -59,8 +59,8 @@ public class AjoGroupServiceImpl implements AjoGroupService {
         currentUser = entityManager.merge(currentUser);
 
         Set<Users> users = new HashSet<>();
-       users.add(currentUser);
-       ajoGroup.setUsers(users);
+        users.add(currentUser);
+        ajoGroup.setUsers(users);
 
         List<Integer> availableSlots = generateAvailableSlots(ajoGroup.getNumberOfParticipant());
         Integer assignedSlot = assignSlotToUser(availableSlots);
@@ -278,6 +278,23 @@ public class AjoGroupServiceImpl implements AjoGroupService {
                     long totalCount = ajoGroupRepository.count();
                     log.info(String.valueOf(totalCount));
                     return ResponseEntity.ok(totalCount);
+                }
+            }
+        }
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
+    @Override
+    public ResponseEntity<Double> getTotalContributions(Authentication authentication){
+        if (authentication != null && authentication.isAuthenticated()){
+            for (GrantedAuthority authority : authentication.getAuthorities()){
+                if (authority.getAuthority().equals("ADMIN")){
+                    List<Users> users = userRepository.findAll();
+                    double totalContrbutions = 0.0;
+                    for (Users user : users){
+                        totalContrbutions += user.getTotalGroupSavings().doubleValue();
+                    }
+                    log.info(String.valueOf(totalContrbutions));
+                    return ResponseEntity.status(HttpStatus.OK).body(totalContrbutions);
                 }
             }
         }

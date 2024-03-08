@@ -7,6 +7,7 @@ import com.ajosavings.ajosavigs.models.PasswordToken;
 import com.ajosavings.ajosavigs.models.Users;
 import jakarta.mail.MessagingException;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,4 +25,6 @@ public interface UsersService {
     void logout();
     ResponseEntity<String> updateProfilePicture(String profilePicture, String username);
     ResponseEntity<String> updateUserDetails(ProfileUpdateDto profileUpdateDto);
+
+    ResponseEntity<Long> getAllUsers(Authentication authentication);
 }
