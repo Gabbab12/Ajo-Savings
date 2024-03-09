@@ -54,9 +54,9 @@ public class AdminController {
         return usersService.getAllUsers(authentication);
     }
 
-    @GetMapping("/total-ajo-groups")
-    public ResponseEntity<Long> getTotalAjoGroups(Authentication authentication, @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        return ajoGroupService.getTotalAjoGroups(authentication, date);
+    @GetMapping("/get-new-created-group")
+    public ResponseEntity<Long> getNewGroupNumbers(Authentication authentication) {
+        return ajoGroupService.getNewAjoGroups(authentication);
     }
 
     }

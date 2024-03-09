@@ -310,15 +310,14 @@ public class AjoGroupServiceImpl implements AjoGroupService {
 
 
     @Override
-    public ResponseEntity<Long> getTotalAjoGroups(Authentication authentication, LocalDate date) {
+    public ResponseEntity<Long> getNewAjoGroups(Authentication authentication) {
         if (authentication != null && authentication.isAuthenticated()) {
         for (GrantedAuthority authority : authentication.getAuthorities()) {
             if (authority.getAuthority().equals("ADMIN")) {
-                LocalDateTime startOfDay = date.atStartOfDay();
-                LocalDateTime endOfDay = date.atTime(LocalTime.MAX);
-
-                long totalCount = ajoGroupRepository.countByCreatedAtBetween(startOfDay, endOfDay);
-                return ResponseEntity.ok(totalCount);
+                LocalDateTime startOfToday = LocalDateTime.now().with(LocalTime.MIN);
+                LocalDateTime endOfToday = LocalDateTime.now().with(LocalTime.MAX);
+                long totalGroupNumber = ajoGroupRepository.countByCreatedAtBetween(startOfToday, endOfToday);
+                return ResponseEntity.status(HttpStatus.OK).body(totalGroupNumber);
             }
         }
         }

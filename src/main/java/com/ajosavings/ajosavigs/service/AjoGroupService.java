@@ -31,6 +31,6 @@ public interface AjoGroupService {
     ResponseEntity<Double> getTotalContributions(Authentication authentication);
 
 
-    ResponseEntity<Long> getTotalAjoGroups(Authentication authentication, LocalDate date);
+    ResponseEntity<Long> getNewAjoGroups(Authentication authentication);
 }
 

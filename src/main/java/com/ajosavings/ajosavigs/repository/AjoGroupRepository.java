@@ -14,7 +14,7 @@ public interface AjoGroupRepository extends JpaRepository<AjoGroup, Long> {
     List<AjoGroup> findByUsersId(Long userId);
     long count();
 
-    long countByCreatedAtBetween(LocalDateTime startOfDay, LocalDateTime endOfDay);
+    long countByCreatedAtBetween(LocalDateTime startOfDay,  LocalDateTime endOfDay);
 
 
 }
