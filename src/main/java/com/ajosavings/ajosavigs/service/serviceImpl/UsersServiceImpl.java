@@ -293,4 +293,12 @@ public class UsersServiceImpl implements UsersService {
         }
         return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
+
+    @Override
+    public long countNewUsers() {
+        LocalDateTime startTime = LocalDateTime.now().minusHours(24);
+        LocalDateTime endTime = LocalDateTime.now();
+
+        return userRepository.countByCreatedAtBetween(startTime, endTime);
+    }
 }

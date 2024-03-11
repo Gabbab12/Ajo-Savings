@@ -71,5 +71,11 @@ public class AdminController {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
 
+    @GetMapping("/total-new-users")
+    public ResponseEntity<Long> getTotalNewUsers() {
+        long totalNewUsers = usersService.countNewUsers();
+        return ResponseEntity.ok(totalNewUsers);
+    }
+
 }
 
