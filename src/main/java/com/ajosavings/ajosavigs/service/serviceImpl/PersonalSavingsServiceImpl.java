@@ -90,7 +90,9 @@ public class PersonalSavingsServiceImpl implements PersonalSavingsService {
             personalSavingsRepository.save(personalSavings);
 
             BigDecimal updatedGlobalWallet = users.getGlobalWallet().add(amount);
+            BigDecimal updatedTotalPersonalSavings = users.getTotalPersonalSavings().subtract(amount);
             users.setGlobalWallet(updatedGlobalWallet);
+            users.setTotalPersonalSavings(updatedTotalPersonalSavings);
             userRepository.save(users);
 
             saveTransactionHistory(amount, personalSavings.getTarget(), TransactionType.CREDIT, users);
@@ -142,7 +144,9 @@ public class PersonalSavingsServiceImpl implements PersonalSavingsService {
             personalSavingsRepository.save(personalSavings);
 
             BigDecimal updatedGlobalWallet = users.getGlobalWallet().subtract(amount);
+            BigDecimal updatedTotalPersonalSavings = users.getTotalPersonalSavings().add(amount);
             users.setGlobalWallet(updatedGlobalWallet);
+            users.setTotalPersonalSavings(updatedTotalPersonalSavings);
             userRepository.save(users);
 
             saveTransactionHistory(amount, personalSavings.getTarget(), TransactionType.DEBIT, users);

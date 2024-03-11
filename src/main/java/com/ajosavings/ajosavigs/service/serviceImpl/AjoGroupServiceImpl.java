@@ -28,6 +28,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -59,8 +61,8 @@ public class AjoGroupServiceImpl implements AjoGroupService {
         currentUser = entityManager.merge(currentUser);
 
         Set<Users> users = new HashSet<>();
-       users.add(currentUser);
-       ajoGroup.setUsers(users);
+        users.add(currentUser);
+        ajoGroup.setUsers(users);
 
         List<Integer> availableSlots = generateAvailableSlots(ajoGroup.getNumberOfParticipant());
         Integer assignedSlot = assignSlotToUser(availableSlots);
@@ -198,6 +200,7 @@ public class AjoGroupServiceImpl implements AjoGroupService {
 
         return ResponseEntity.status(HttpStatus.OK).body(ajoGroup);
     }
+
     @Override
     public List<ContributionFlowDto> generateContributionsFlow(AjoGroup ajoGroup) {
         List<ContributionFlowDto> contributions = new ArrayList<>();
@@ -259,16 +262,19 @@ public class AjoGroupServiceImpl implements AjoGroupService {
             case MONTHLY -> 30;
         };
     }
+
     @Override
     public List<AjoGroup> getGroupsByUserId(Long userId) {
         return ajoGroupRepository.findAll().stream()
                 .filter(ajoGroup -> containsUserWithId(ajoGroup, userId))
                 .collect(Collectors.toList());
     }
+
     private boolean containsUserWithId(AjoGroup ajoGroup, Long userId) {
         return ajoGroup.getUsers().stream()
                 .anyMatch(user -> user.getId().equals(userId));
     }
+
     @Override
     public ResponseEntity<Long> getTotalSavingGroups() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -283,6 +289,7 @@ public class AjoGroupServiceImpl implements AjoGroupService {
         }
         return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
+ endpoint-for-defaulted-user
     @Override
     public ResponseEntity<List<Users>> getDefaultedUsers(Long ajoGroupId, Authentication authentication) {
         if (authentication != null && authentication.isAuthenticated()) {
@@ -303,9 +310,44 @@ public class AjoGroupServiceImpl implements AjoGroupService {
                     } else {
                         return ResponseEntity.notFound().build();
                     }
+
+
+    @Override
+    public ResponseEntity<Double> getTotalContributions(Authentication authentication) {
+        if (authentication != null && authentication.isAuthenticated()) {
+            for (GrantedAuthority authority : authentication.getAuthorities()) {
+                if (authority.getAuthority().equals("ADMIN")) {
+                    List<Users> users = userRepository.findAll();
+                    double totalContrbutions = 0.0;
+                    for (Users user : users) {
+                        totalContrbutions += user.getTotalGroupSavings().doubleValue();
+                    }
+                    log.info(String.valueOf(totalContrbutions));
+                    return ResponseEntity.status(HttpStatus.OK).body(totalContrbutions);
+ main
                 }
             }
         }
         return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+ endpoint-for-defaulted-user
 }
+    }
+
+
+    @Override
+    public ResponseEntity<Long> getNewAjoGroups(Authentication authentication) {
+        if (authentication != null && authentication.isAuthenticated()) {
+        for (GrantedAuthority authority : authentication.getAuthorities()) {
+            if (authority.getAuthority().equals("ADMIN")) {
+                LocalDateTime startOfToday = LocalDateTime.now().with(LocalTime.MIN);
+                LocalDateTime endOfToday = LocalDateTime.now().with(LocalTime.MAX);
+                long totalGroupNumber = ajoGroupRepository.countByCreatedAtBetween(startOfToday, endOfToday);
+                return ResponseEntity.status(HttpStatus.OK).body(totalGroupNumber);
+            }
+        }
+        }
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
+
+ main
 }
