@@ -5,6 +5,7 @@ import com.ajosavings.ajosavigs.dto.request.ContributionFlowDto;
 import com.ajosavings.ajosavigs.models.AjoGroup;
 import com.ajosavings.ajosavigs.models.Users;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 
 import java.util.List;
 import java.util.Optional;
@@ -25,4 +26,6 @@ public interface AjoGroupService {
     List<AjoGroup> getGroupsByUserId(Long userId);
 
     ResponseEntity<Long> getTotalSavingGroups();
+
+    ResponseEntity<List<Users>> getDefaultedUsers(Long ajoGroupId, Authentication authentication);
 }

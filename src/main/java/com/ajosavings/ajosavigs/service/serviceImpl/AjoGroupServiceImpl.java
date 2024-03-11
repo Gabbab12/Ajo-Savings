@@ -283,4 +283,29 @@ public class AjoGroupServiceImpl implements AjoGroupService {
         }
         return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
+    @Override
+    public ResponseEntity<List<Users>> getDefaultedUsers(Long ajoGroupId, Authentication authentication) {
+        if (authentication != null && authentication.isAuthenticated()) {
+            for (GrantedAuthority authority : authentication.getAuthorities()) {
+                if (authority.getAuthority().equals("ADMIN")) {
+                    AjoGroup ajoGroup = ajoGroupRepository.findById(ajoGroupId).orElse(null);
+
+                    if (ajoGroup != null) {
+                        Set<Users> defaultedUsers = ajoGroup.getUsers().stream()
+                                .filter(user -> user.isEnabled())
+                                .collect(Collectors.toSet());
+
+                        if (!defaultedUsers.isEmpty()) {
+                            return ResponseEntity.ok(new ArrayList<>(defaultedUsers));
+                        } else {
+                            return ResponseEntity.ok(Collections.emptyList());
+                        }
+                    } else {
+                        return ResponseEntity.notFound().build();
+                    }
+                }
+            }
+        }
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+}
 }

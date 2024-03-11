@@ -80,4 +80,18 @@ public class AjoGroupController {
         }
         return new ResponseEntity<>(groups, HttpStatus.OK);
     }
+
+    @GetMapping("/{ajoGroupId}/defaulted-users")
+    public ResponseEntity<List<Users>> getDefaultedUsers(
+            @PathVariable Long ajoGroupId,
+            Authentication authentication) {
+        try {
+            ResponseEntity<List<Users>> responseEntity =
+                    ajoGroupService.getDefaultedUsers(ajoGroupId, authentication);
+            return ResponseEntity.status(responseEntity.getStatusCode())
+                    .body(responseEntity.getBody());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
 }
