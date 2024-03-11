@@ -1,5 +1,6 @@
 package com.ajosavings.ajosavigs.controller;
 
+import com.ajosavings.ajosavigs.service.UsersService;
 import com.ajosavings.ajosavigs.service.serviceImpl.AjoGroupServiceImpl;
 import com.ajosavings.ajosavigs.service.serviceImpl.PersonalSavingsServiceImpl;
 import com.ajosavings.ajosavigs.service.serviceImpl.TransactionServiceImpl;
@@ -11,6 +12,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDateTime;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("api/v1/admin")
@@ -20,6 +23,7 @@ public class AdminController {
     private final PersonalSavingsServiceImpl savingsService;
     private final AjoGroupServiceImpl ajoGroupService;
     private final TransactionServiceImpl transactionService;
+    private final UsersService usersService;
 
     @GetMapping("/total-amount-saved")
     public ResponseEntity<Double> getTotalAmountSaved(Authentication authentication){
@@ -33,5 +37,11 @@ public class AdminController {
     @GetMapping("/total-amount-withdrawn")
     public ResponseEntity<Double> getTotalAmountWithdrawn(Authentication authentication) {
         return transactionService.getTotalAmountWithdrawn(authentication);
+    }
+
+    @GetMapping("/total-user-registrations")
+    public ResponseEntity<Integer> getUserRegistrations(LocalDateTime createdAt) {
+        int registrationsByDate = usersService.getTotalNewUserRegistrations(createdAt);
+        return ResponseEntity.ok(registrationsByDate);
     }
 }

@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Repository
@@ -21,5 +22,5 @@ public interface UserRepository extends JpaRepository<Users, Long> {
     Optional<Users> findUsersByUsername(String username);
 
     boolean existsByRole(Role role);
-    int countByRegistrationDateBetween(LocalDate startDate, LocalDate endDate);
+    int countByCreatedAt(LocalDateTime createdAt);
 }
