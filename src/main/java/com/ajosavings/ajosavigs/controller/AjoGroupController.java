@@ -5,11 +5,15 @@ import com.ajosavings.ajosavigs.dto.request.ContributionFlowDto;
 import com.ajosavings.ajosavigs.enums.Role;
 import com.ajosavings.ajosavigs.exception.ResourceNotFoundException;
 import com.ajosavings.ajosavigs.models.AjoGroup;
+import com.ajosavings.ajosavigs.models.GroupTransactionHistory;
 import com.ajosavings.ajosavigs.models.Users;
 import com.ajosavings.ajosavigs.repository.AjoGroupRepository;
 import com.ajosavings.ajosavigs.service.serviceImpl.AjoGroupServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -81,6 +85,7 @@ public class AjoGroupController {
         return new ResponseEntity<>(groups, HttpStatus.OK);
     }
 
+
     @PutMapping("/update-group/{ajoGroupId}")
     public ResponseEntity<AjoGroup> editAjoGroup(@PathVariable Long ajoGroupId, @RequestBody AjoGroupDTO updatedAjoGroupDTO){
         return ajoGroupService.updateAjoGroup(ajoGroupId,updatedAjoGroupDTO);
@@ -91,4 +96,11 @@ public class AjoGroupController {
         return ajoGroupService.deleteAjoGroup(ajoGroupId);
     }
 
+
+    @GetMapping("/get-group-transaction/{groupId}")
+    public ResponseEntity<Page<GroupTransactionHistory>> getGroupTransactionHistory(@PathVariable Long groupId, Authentication authentication,
+                                                                                    @PageableDefault(size = 10, page = 0) Pageable pageable) {
+        Page<GroupTransactionHistory> transactionHistoryPage = ajoGroupService.getGroupTransactionHistory(groupId, authentication, pageable);
+        return ResponseEntity.ok(transactionHistoryPage);
+    }
 }

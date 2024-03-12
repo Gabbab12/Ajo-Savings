@@ -27,4 +27,6 @@ public interface UsersService {
     ResponseEntity<String> updateUserDetails(ProfileUpdateDto profileUpdateDto);
 
     ResponseEntity<Long> getAllUsers(Authentication authentication);
+    long countNewUsers();
+
 }
