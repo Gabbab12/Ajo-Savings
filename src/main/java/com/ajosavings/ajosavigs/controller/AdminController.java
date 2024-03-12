@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.webjars.NotFoundException;
 
 @RestController
 @RequiredArgsConstructor
@@ -31,9 +32,10 @@ public class AdminController {
     private final UsersServiceImpl usersService;
 
     @GetMapping("/total-amount-saved")
-    public ResponseEntity<Double> getTotalAmountSaved(Authentication authentication){
+    public ResponseEntity<Double> getTotalAmountSaved(Authentication authentication) {
         return savingsService.getTotalAmountSaved(authentication);
     }
+
     @GetMapping("/total-saved-groups")
     public ResponseEntity<Long> getTotalSavingGroups() {
         return ajoGroupService.getTotalSavingGroups();
@@ -43,13 +45,14 @@ public class AdminController {
     public ResponseEntity<Double> getTotalAmountWithdrawn(Authentication authentication) {
         return transactionService.getTotalAmountWithdrawn(authentication);
     }
+
     @GetMapping("/total-contributions")
-    public ResponseEntity<Double> getTotalContributions(Authentication authentication){
+    public ResponseEntity<Double> getTotalContributions(Authentication authentication) {
         return ajoGroupService.getTotalContributions(authentication);
     }
 
     @GetMapping("/get-all-users")
-    public ResponseEntity<Long> getAllUsersNumber(Authentication authentication){
+    public ResponseEntity<Long> getAllUsersNumber(Authentication authentication) {
         return usersService.getAllUsers(authentication);
     }
 
@@ -57,12 +60,13 @@ public class AdminController {
     public ResponseEntity<Long> getNewGroupNumbers(Authentication authentication) {
         return ajoGroupService.getNewAjoGroups(authentication);
     }
+
     @GetMapping("/get-received-transactions/{groupId}")
     public ResponseEntity<Page<GroupTransactionHistory>> getGroupReceivedTransactions(@PathVariable Long groupId,
                                                                                       @PageableDefault(size = 10, page = 0) Pageable pageable, Authentication authentication) {
-        if (authentication != null && authentication.isAuthenticated()){
-            for (GrantedAuthority authority : authentication.getAuthorities()){
-                if (authority.getAuthority().equals("ADMIN")){
+        if (authentication != null && authentication.isAuthenticated()) {
+            for (GrantedAuthority authority : authentication.getAuthorities()) {
+                if (authority.getAuthority().equals("ADMIN")) {
                     Page<GroupTransactionHistory> transactionHistoryPage = ajoGroupService.getGroupReceivedTransactions(groupId, pageable);
                     return ResponseEntity.ok(transactionHistoryPage);
                 }
@@ -71,5 +75,23 @@ public class AdminController {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
 
+    @GetMapping("/total-new-users")
+    public ResponseEntity<Long> getTotalNewUsers(Authentication authentication) {
+        if (authentication != null && authentication.isAuthenticated()) {
+            for (GrantedAuthority authority : authentication.getAuthorities()) {
+                if (authority.getAuthority().equals("ADMIN")) {
+                    long totalNewUsers = usersService.countNewUsers();
+                    {
+                        return ResponseEntity.ok(totalNewUsers);
+                    }
+                }
+            }
+        }
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
+
 }
+
+
+
 
