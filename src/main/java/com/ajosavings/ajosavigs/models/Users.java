@@ -82,4 +82,8 @@ public class Users extends AuditBaseEntity implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
+
+    public boolean isAdmin() {
+        return true;
+    }
 }

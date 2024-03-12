@@ -6,6 +6,7 @@ import com.ajosavings.ajosavigs.models.AjoGroup;
 import com.ajosavings.ajosavigs.models.Users;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -32,5 +33,11 @@ public interface AjoGroupService {
 
 
     ResponseEntity<Long> getNewAjoGroups(Authentication authentication);
+
+    @Transactional
+    ResponseEntity<AjoGroup> updateAjoGroup(Long ajoGroupId, AjoGroupDTO updatedAjoGroupDTO);
+
+    @Transactional
+    ResponseEntity<Void> deleteAjoGroup(Long ajoGroupId);
 }
 

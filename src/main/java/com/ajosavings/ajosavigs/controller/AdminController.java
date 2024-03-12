@@ -59,5 +59,6 @@ public class AdminController {
         return ajoGroupService.getNewAjoGroups(authentication);
     }
 
-    }
+
+}
 

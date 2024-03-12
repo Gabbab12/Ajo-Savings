@@ -4,9 +4,7 @@ import com.ajosavings.ajosavigs.dto.request.AjoGroupDTO;
 import com.ajosavings.ajosavigs.dto.request.ContributionFlowDto;
 import com.ajosavings.ajosavigs.enums.PaymentPeriod;
 import com.ajosavings.ajosavigs.enums.TransactionType;
-import com.ajosavings.ajosavigs.exception.AccessDeniedException;
-import com.ajosavings.ajosavigs.exception.BadRequestException;
-import com.ajosavings.ajosavigs.exception.InsufficientFundsException;
+import com.ajosavings.ajosavigs.exception.*;
 import com.ajosavings.ajosavigs.models.AjoGroup;
 import com.ajosavings.ajosavigs.models.TransactionHistory;
 import com.ajosavings.ajosavigs.models.Users;
@@ -322,6 +320,55 @@ public class AjoGroupServiceImpl implements AjoGroupService {
         }
         }
         return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
+
+    @Override
+    @Transactional
+    public ResponseEntity<AjoGroup> updateAjoGroup(Long ajoGroupId, AjoGroupDTO updatedAjoGroupDTO) {
+
+        AjoGroup existingAjoGroup = ajoGroupRepository.findById(ajoGroupId)
+                .orElseThrow(() -> new BadRequestException("AjoGroup not found with id",HttpStatus.BAD_REQUEST));
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Users currentUser = (Users) authentication.getPrincipal();
+
+        if (!currentUser.isAdmin() && !existingAjoGroup.getUsers().equals(currentUser)) {
+            throw new ForbiddenException("You are not authorized to update this AjoGroup",HttpStatus.FORBIDDEN);
+        }
+
+        existingAjoGroup.setGroupName(updatedAjoGroupDTO.getGroupName());
+        existingAjoGroup.setDuration(updatedAjoGroupDTO.getDuration());
+        existingAjoGroup.setContributionAmount(updatedAjoGroupDTO.getContributionAmount());
+        existingAjoGroup.setDuration(updatedAjoGroupDTO.getDuration());
+        existingAjoGroup.setExpectedEndDate(updatedAjoGroupDTO.getExpectedEndDate());
+        existingAjoGroup.setExpectedStartDate(updatedAjoGroupDTO.getExpectedStartDate());
+        existingAjoGroup.setNumberOfParticipant(updatedAjoGroupDTO.getNumberOfParticipant());
+        existingAjoGroup.setPaymentPeriod(updatedAjoGroupDTO.getPaymentPeriod());
+        existingAjoGroup.setProfilePicture(updatedAjoGroupDTO.getProfilePicture());
+        existingAjoGroup.setPurposeAndGoals(updatedAjoGroupDTO.getPurposeAndGoals());
+
+        AjoGroup updatedAjoGroup = ajoGroupRepository.save(existingAjoGroup);
+
+        return ResponseEntity.ok(updatedAjoGroup);
+    }
+
+    @Override
+    @Transactional
+    public ResponseEntity<Void> deleteAjoGroup(Long ajoGroupId) {
+
+        AjoGroup ajoGroup = ajoGroupRepository.findById(ajoGroupId)
+                .orElseThrow(() -> new NotFoundException("AjoGroup not found with id",HttpStatus.NOT_FOUND));
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Users currentUser = (Users) authentication.getPrincipal();
+
+        if (!currentUser.isAdmin()) {
+            throw new ForbiddenException("Only admin users can delete AjoGroups",HttpStatus.FORBIDDEN);
+        }
+
+        ajoGroupRepository.deleteById(ajoGroupId);
+
+        return ResponseEntity.noContent().build();
     }
 
 }

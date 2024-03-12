@@ -80,4 +80,15 @@ public class AjoGroupController {
         }
         return new ResponseEntity<>(groups, HttpStatus.OK);
     }
+
+    @PutMapping("/update-group/{ajoGroupId}")
+    public ResponseEntity<AjoGroup> editAjoGroup(@PathVariable Long ajoGroupId, @RequestBody AjoGroupDTO updatedAjoGroupDTO){
+        return ajoGroupService.updateAjoGroup(ajoGroupId,updatedAjoGroupDTO);
+    }
+
+    @DeleteMapping("delete-group/{ajoGroupId}")
+    public ResponseEntity<?> deleteAjoGroup(@PathVariable Long ajoGroupId){
+        return ajoGroupService.deleteAjoGroup(ajoGroupId);
+    }
+
 }
