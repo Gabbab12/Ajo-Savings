@@ -90,6 +90,20 @@ public class AdminController {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
 
+    @GetMapping("/get-sent-transactions/{groupId}")
+    public ResponseEntity<Page<GroupTransactionHistory>> getGroupSentTransactions(@PathVariable Long groupId,
+                                                                                  @PageableDefault(size = 10, page = 0) Pageable pageable, Authentication authentication) {
+        if (authentication != null && authentication.isAuthenticated()) {
+            for (GrantedAuthority authority : authentication.getAuthorities()) {
+                if (authority.getAuthority().equals("ADMIN")) {
+                    Page<GroupTransactionHistory> transactionHistoryPage = ajoGroupService.getGroupSentTransactions(groupId, pageable);
+                    return ResponseEntity.ok(transactionHistoryPage);
+                }
+            }
+        }
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
+
 }
 
 

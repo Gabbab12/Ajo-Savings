@@ -8,7 +8,9 @@ import com.ajosavings.ajosavigs.models.Users;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.Authentication;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -25,6 +27,10 @@ public interface AjoGroupService {
 
     ResponseEntity<AjoGroup> makeContribution(Long ajoGroupId);
 
+    @Scheduled(cron = "0 0 0 * * *") // Run every day at midnight
+    @Transactional
+    void processGroupPayments();
+
     List<ContributionFlowDto> generateContributionsFlow(AjoGroup ajoGroup);
 
     List<AjoGroup> getGroupsByUserId(Long userId);
@@ -39,5 +45,7 @@ public interface AjoGroupService {
     Page<GroupTransactionHistory> getGroupTransactionHistory(Long groupId, Authentication authentication, Pageable pageable);
 
     Page<GroupTransactionHistory> getGroupReceivedTransactions(Long groupId, Pageable pageable);
+
+    Page<GroupTransactionHistory> getGroupSentTransactions(Long groupId, Pageable pageable);
 }
 
