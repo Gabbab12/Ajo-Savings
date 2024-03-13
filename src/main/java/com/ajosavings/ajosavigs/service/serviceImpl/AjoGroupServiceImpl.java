@@ -4,18 +4,13 @@ import com.ajosavings.ajosavigs.dto.request.AjoGroupDTO;
 import com.ajosavings.ajosavigs.dto.request.ContributionFlowDto;
 import com.ajosavings.ajosavigs.enums.GroupTransactionStatus;
 import com.ajosavings.ajosavigs.enums.PaymentPeriod;
+import com.ajosavings.ajosavigs.enums.Role;
 import com.ajosavings.ajosavigs.enums.TransactionType;
 import com.ajosavings.ajosavigs.exception.AccessDeniedException;
 import com.ajosavings.ajosavigs.exception.BadRequestException;
 import com.ajosavings.ajosavigs.exception.InsufficientFundsException;
-import com.ajosavings.ajosavigs.models.AjoGroup;
-import com.ajosavings.ajosavigs.models.GroupTransactionHistory;
-import com.ajosavings.ajosavigs.models.TransactionHistory;
-import com.ajosavings.ajosavigs.models.Users;
-import com.ajosavings.ajosavigs.repository.AjoGroupRepository;
-import com.ajosavings.ajosavigs.repository.GroupTransactionHistoryRepo;
-import com.ajosavings.ajosavigs.repository.TransactionHistoryRepository;
-import com.ajosavings.ajosavigs.repository.UserRepository;
+import com.ajosavings.ajosavigs.models.*;
+import com.ajosavings.ajosavigs.repository.*;
 import com.ajosavings.ajosavigs.service.AjoGroupService;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +20,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -32,11 +28,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.ZoneId;
+import java.time.*;
 import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAdjusters;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -50,6 +44,8 @@ public class AjoGroupServiceImpl implements AjoGroupService {
     private final TransactionHistoryRepository transactionHistoryRepository;
     private final EntityManager entityManager;
     private final GroupTransactionHistoryRepo groupTransactionHistoryRepo;
+    private final UserRepository usersRepository;
+    private final DefaultedUsersRepository defaultedUsersRepository;
 
 
     @Override
@@ -195,26 +191,104 @@ public class AjoGroupServiceImpl implements AjoGroupService {
         users.setGlobalWallet(updatedGlobalWallet);
         userRepository.save(users);
 
-        TransactionHistory transactionHistory = new TransactionHistory();
-        transactionHistory.setUser(users);
-        transactionHistory.setName(ajoGroup.getGroupName());
-        transactionHistory.setType(TransactionType.DEBIT);
-        transactionHistory.setAmount(BigDecimal.valueOf(ajoGroup.getContributionAmount()));
-        transactionHistory.setDate(LocalDate.now());
-        log.info(String.valueOf(transactionHistory));
-        transactionHistoryRepository.save(transactionHistory);
+        recordTransactionHistory(users, ajoGroup.getGroupName(), BigDecimal.valueOf(ajoGroup.getContributionAmount()), TransactionType.CREDIT);
+        recordGroupTransactionHistory(users, ajoGroup, BigDecimal.valueOf(ajoGroup.getContributionAmount()), GroupTransactionStatus.RECEIVE);
 
-        GroupTransactionHistory groupTransactionHistory = new GroupTransactionHistory();
-        groupTransactionHistory.setSlot(users.getAjoSlot());
-        groupTransactionHistory.setUserId(String.format("USR%06d", users.getId()));
-        groupTransactionHistory.setStatus(GroupTransactionStatus.RECEIVE);
-        groupTransactionHistory.setContributionAmount(BigDecimal.valueOf(ajoGroup.getContributionAmount()));
-        groupTransactionHistory.setName(users.getFirstName() + " " + users.getLastName());
-        groupTransactionHistory.setAjoGroup(ajoGroup);
-        log.info(String.valueOf(groupTransactionHistory));
-        groupTransactionHistoryRepo.save(groupTransactionHistory);
 
         return ResponseEntity.status(HttpStatus.OK).body(ajoGroup);
+    }
+    public void recordGroupTransactionHistory(Users user, AjoGroup ajoGroup, BigDecimal contributionAmount, GroupTransactionStatus status) {
+        GroupTransactionHistory groupTransactionHistory = new GroupTransactionHistory();
+        groupTransactionHistory.setSlot(user.getAjoSlot());
+        groupTransactionHistory.setUserId(String.format("USR%06d", user.getId()));
+        groupTransactionHistory.setStatus(status);
+        groupTransactionHistory.setContributionAmount(contributionAmount);
+        groupTransactionHistory.setName(user.getFirstName() + " " + user.getLastName());
+        groupTransactionHistory.setAjoGroup(ajoGroup);
+        groupTransactionHistoryRepo.save(groupTransactionHistory);
+    }
+
+    public void recordTransactionHistory(Users user, String name, BigDecimal amount, TransactionType type) {
+        TransactionHistory transactionHistory = new TransactionHistory();
+        transactionHistory.setUser(user);
+        transactionHistory.setName(name);
+        transactionHistory.setType(type);
+        transactionHistory.setAmount(amount);
+        transactionHistory.setDate(LocalDate.now());
+        transactionHistoryRepository.save(transactionHistory);
+    }
+    @Override
+    @Scheduled(cron = "0 0 0 * * *") // Run every day at midnight
+    @Transactional
+    public void processGroupPayments() {
+        List<AjoGroup> ajoGroups = ajoGroupRepository.findAll();
+
+        for (AjoGroup ajoGroup : ajoGroups) {
+            LocalDate expectedEndDate = calculateExpectedEndDate(ajoGroup);
+
+            if (isContributionPeriodEnded(ajoGroup, expectedEndDate)) {
+                BigDecimal totalContributionAmount = BigDecimal.valueOf(ajoGroup.getContributionAmount());
+                BigDecimal interestRate = BigDecimal.valueOf(0.05);
+
+                Set<Integer> paidSlots = new HashSet<>();
+                Set<Users> paidUsers = findPaidUsers(ajoGroup, expectedEndDate);
+                List<Users> defaultedUsers = new ArrayList<>();
+
+                for (Users user : ajoGroup.getUsers()) {
+                    if (!paidUsers.contains(user)) {
+                        // User hasn't made payment, mark as defaulted
+                        DefaultedUsers defaultedUser = new DefaultedUsers();
+                        defaultedUser.setUserId(user.getId()); // Assuming user.getId() returns the user's ID
+                        defaultedUser.setName(user.getFirstName() + " " + user.getLastName());
+                        defaultedUser.setUsername(user.getUsername());
+                        defaultedUser.setLastLogin(LocalDateTime.now());
+
+                        defaultedUsersRepository.save(defaultedUser);
+                        defaultedUsers.add(user);
+                    } else {
+                        BigDecimal userPayment = totalContributionAmount.multiply(BigDecimal.valueOf(user.getAjoSlot()));
+
+                        BigDecimal interestDeduction = userPayment.multiply(interestRate);
+                        BigDecimal finalPayment = userPayment.subtract(interestDeduction);
+
+                        BigDecimal updatedGlobalWallet = user.getGlobalWallet().add(finalPayment);
+                        user.setGlobalWallet(updatedGlobalWallet);
+                        userRepository.save(user);
+
+                        // Record transaction history
+                        recordTransactionHistory(user, ajoGroup.getGroupName(), finalPayment, TransactionType.CREDIT);
+                        recordGroupTransactionHistory(user, ajoGroup, finalPayment, GroupTransactionStatus.SENT);
+
+                        paidSlots.add(user.getAjoSlot());
+                    }
+                }
+            }
+        }
+    }
+
+    private Set<Users> findPaidUsers(AjoGroup ajoGroup, LocalDate expectedEndDate) {
+        List<GroupTransactionHistory> transactions = groupTransactionHistoryRepo.findByAjoGroupAndCreatedAtIsAfter(ajoGroup, expectedEndDate.atStartOfDay());
+        Set<Users> paidUsers = new HashSet<>();
+        for (GroupTransactionHistory transaction : transactions) {
+            paidUsers.add((Users) transaction.getAjoGroup().getUsers());
+        }
+        return paidUsers;
+    }
+
+    private LocalDate calculateExpectedEndDate(AjoGroup ajoGroup) {
+        Date startDate = ajoGroup.getExpectedStartDate();
+        Instant instant = startDate.toInstant();
+        LocalDate expectedEndDate = instant.atZone(ZoneId.systemDefault()).toLocalDate();
+        expectedEndDate = switch (ajoGroup.getPaymentPeriod()) {
+            case MONTHLY -> expectedEndDate.plusMonths(1).with(TemporalAdjusters.lastDayOfMonth());
+            case WEEKLY -> expectedEndDate.plusWeeks(1);
+            case DAILY -> expectedEndDate.plusDays(1);
+        };
+        return expectedEndDate;
+    }
+
+    private boolean isContributionPeriodEnded(AjoGroup ajoGroup, LocalDate expectedEndDate) {
+        return LocalDate.now().isAfter(expectedEndDate);
     }
 
     @Override
@@ -358,7 +432,12 @@ public class AjoGroupServiceImpl implements AjoGroupService {
     public Page<GroupTransactionHistory> getGroupReceivedTransactions(Long groupId, Pageable pageable) {
         AjoGroup ajoGroup = ajoGroupRepository.findById(groupId)
                 .orElseThrow(() -> new ResourceNotFoundException("AjoGroup with id " + groupId + " not found"));
-
         return groupTransactionHistoryRepo.findByAjoGroupAndStatus(ajoGroup, GroupTransactionStatus.RECEIVE, pageable);
+    }
+    @Override
+    public Page<GroupTransactionHistory> getGroupSentTransactions(Long groupId, Pageable pageable) {
+        AjoGroup ajoGroup = ajoGroupRepository.findById(groupId)
+                .orElseThrow(() -> new ResourceNotFoundException("AjoGroup with id " + groupId + " not found"));
+        return groupTransactionHistoryRepo.findByAjoGroupAndStatus(ajoGroup, GroupTransactionStatus.SENT, pageable);
     }
 }
