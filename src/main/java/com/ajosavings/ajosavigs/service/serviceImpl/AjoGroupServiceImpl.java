@@ -2,14 +2,17 @@ package com.ajosavings.ajosavigs.service.serviceImpl;
 
 import com.ajosavings.ajosavigs.dto.request.AjoGroupDTO;
 import com.ajosavings.ajosavigs.dto.request.ContributionFlowDto;
+import com.ajosavings.ajosavigs.enums.GroupTransactionStatus;
 import com.ajosavings.ajosavigs.enums.PaymentPeriod;
 import com.ajosavings.ajosavigs.enums.Role;
 import com.ajosavings.ajosavigs.enums.TransactionType;
 import com.ajosavings.ajosavigs.exception.*;
 import com.ajosavings.ajosavigs.models.AjoGroup;
+import com.ajosavings.ajosavigs.models.GroupTransactionHistory;
 import com.ajosavings.ajosavigs.models.TransactionHistory;
 import com.ajosavings.ajosavigs.models.Users;
 import com.ajosavings.ajosavigs.repository.AjoGroupRepository;
+import com.ajosavings.ajosavigs.repository.GroupTransactionHistoryRepo;
 import com.ajosavings.ajosavigs.repository.TransactionHistoryRepository;
 import com.ajosavings.ajosavigs.repository.UserRepository;
 import com.ajosavings.ajosavigs.service.AjoGroupService;
@@ -17,6 +20,8 @@ import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.velocity.exception.ResourceNotFoundException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -43,6 +48,7 @@ public class AjoGroupServiceImpl implements AjoGroupService {
     private final UserRepository userRepository;
     private final TransactionHistoryRepository transactionHistoryRepository;
     private final EntityManager entityManager;
+    private final GroupTransactionHistoryRepo groupTransactionHistoryRepo;
 
 
     @Override
@@ -194,8 +200,18 @@ public class AjoGroupServiceImpl implements AjoGroupService {
         transactionHistory.setType(TransactionType.DEBIT);
         transactionHistory.setAmount(BigDecimal.valueOf(ajoGroup.getContributionAmount()));
         transactionHistory.setDate(LocalDate.now());
-
+        log.info(String.valueOf(transactionHistory));
         transactionHistoryRepository.save(transactionHistory);
+
+        GroupTransactionHistory groupTransactionHistory = new GroupTransactionHistory();
+        groupTransactionHistory.setSlot(users.getAjoSlot());
+        groupTransactionHistory.setUserId(String.format("USR%06d", users.getId()));
+        groupTransactionHistory.setStatus(GroupTransactionStatus.RECEIVE);
+        groupTransactionHistory.setContributionAmount(BigDecimal.valueOf(ajoGroup.getContributionAmount()));
+        groupTransactionHistory.setName(users.getFirstName() + " " + users.getLastName());
+        groupTransactionHistory.setAjoGroup(ajoGroup);
+        log.info(String.valueOf(groupTransactionHistory));
+        groupTransactionHistoryRepo.save(groupTransactionHistory);
 
         return ResponseEntity.status(HttpStatus.OK).body(ajoGroup);
     }
@@ -307,18 +323,17 @@ public class AjoGroupServiceImpl implements AjoGroupService {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
 
-
     @Override
     public ResponseEntity<Long> getNewAjoGroups(Authentication authentication) {
         if (authentication != null && authentication.isAuthenticated()) {
-        for (GrantedAuthority authority : authentication.getAuthorities()) {
-            if (authority.getAuthority().equals("ADMIN")) {
-                LocalDateTime startOfToday = LocalDateTime.now().with(LocalTime.MIN);
-                LocalDateTime endOfToday = LocalDateTime.now().with(LocalTime.MAX);
-                long totalGroupNumber = ajoGroupRepository.countByCreatedAtBetween(startOfToday, endOfToday);
-                return ResponseEntity.status(HttpStatus.OK).body(totalGroupNumber);
+            for (GrantedAuthority authority : authentication.getAuthorities()) {
+                if (authority.getAuthority().equals("ADMIN")) {
+                    LocalDateTime startOfToday = LocalDateTime.now().with(LocalTime.MIN);
+                    LocalDateTime endOfToday = LocalDateTime.now().with(LocalTime.MAX);
+                    long totalGroupNumber = ajoGroupRepository.countByCreatedAtBetween(startOfToday, endOfToday);
+                    return ResponseEntity.status(HttpStatus.OK).body(totalGroupNumber);
+                }
             }
-        }
         }
         return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
@@ -359,4 +374,26 @@ public class AjoGroupServiceImpl implements AjoGroupService {
         return ResponseEntity.status(HttpStatus.OK).build();
     }
 
+
+    public Page<GroupTransactionHistory> getGroupTransactionHistory(Long groupId, Authentication authentication, Pageable pageable) {
+        Optional<AjoGroup> optionalAjoGroup = ajoGroupRepository.findById(groupId);
+        if (optionalAjoGroup.isEmpty()) {
+            throw new ResourceNotFoundException("AjoGroup with id " + groupId + " does not exist");
+        }
+        AjoGroup ajoGroup = optionalAjoGroup.get();
+        Users currentUser = (Users) authentication.getPrincipal();
+
+        if (!ajoGroup.getUsers().contains(currentUser)) {
+            throw new AccessDeniedException("You are not a member of this Ajo Group", HttpStatus.FORBIDDEN);
+        }
+        return groupTransactionHistoryRepo.findByAjoGroupId(groupId, pageable);
+    }
+
+    @Override
+    public Page<GroupTransactionHistory> getGroupReceivedTransactions(Long groupId, Pageable pageable) {
+        AjoGroup ajoGroup = ajoGroupRepository.findById(groupId)
+                .orElseThrow(() -> new ResourceNotFoundException("AjoGroup with id " + groupId + " not found"));
+
+        return groupTransactionHistoryRepo.findByAjoGroupAndStatus(ajoGroup, GroupTransactionStatus.RECEIVE, pageable);
+    }
 }
