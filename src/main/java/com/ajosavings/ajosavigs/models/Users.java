@@ -1,6 +1,7 @@
 package com.ajosavings.ajosavigs.models;
 
 import com.ajosavings.ajosavigs.enums.Role;
+import com.ajosavings.ajosavigs.enums.UserStatus;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
@@ -40,6 +41,10 @@ public class Users extends AuditBaseEntity implements UserDetails {
     @Enumerated(EnumType.STRING)
     private Role role;
     private int ajoSlot;
+    @Enumerated(EnumType.STRING)
+    private UserStatus status;
+    @Column(nullable = false)
+    private Boolean isEnabled = false;
     @DecimalMin(value = "0.00", inclusive = true, message = "Wallet balance must be at least 0.00")
     private BigDecimal globalWallet = BigDecimal.ZERO;
     @Column(nullable = false, precision = 10, scale = 2)
@@ -80,6 +85,9 @@ public class Users extends AuditBaseEntity implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return isEnabled;
+    }
+    public void updateEnabledStatus() {
+        this.isEnabled = (status == UserStatus.VERIFIED || status == UserStatus.ACTIVE);
     }
 }

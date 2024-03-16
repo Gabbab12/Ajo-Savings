@@ -2,10 +2,7 @@ package com.ajosavings.ajosavigs.service.serviceImpl;
 
 import com.ajosavings.ajosavigs.dto.request.AjoGroupDTO;
 import com.ajosavings.ajosavigs.dto.request.ContributionFlowDto;
-import com.ajosavings.ajosavigs.enums.GroupTransactionStatus;
-import com.ajosavings.ajosavigs.enums.PaymentPeriod;
-import com.ajosavings.ajosavigs.enums.Role;
-import com.ajosavings.ajosavigs.enums.TransactionType;
+import com.ajosavings.ajosavigs.enums.*;
 import com.ajosavings.ajosavigs.exception.AccessDeniedException;
 import com.ajosavings.ajosavigs.exception.BadRequestException;
 import com.ajosavings.ajosavigs.exception.InsufficientFundsException;
@@ -65,6 +62,9 @@ public class AjoGroupServiceImpl implements AjoGroupService {
         Set<Users> users = new HashSet<>();
         users.add(currentUser);
         ajoGroup.setUsers(users);
+
+        currentUser.setStatus(UserStatus.ACTIVE);
+        userRepository.save(currentUser);
 
         List<Integer> availableSlots = generateAvailableSlots(ajoGroup.getNumberOfParticipant());
         Integer assignedSlot = assignSlotToUser(availableSlots);
@@ -227,7 +227,7 @@ public class AjoGroupServiceImpl implements AjoGroupService {
             LocalDate expectedEndDate = calculateExpectedEndDate(ajoGroup);
 
             if (isContributionPeriodEnded(ajoGroup, expectedEndDate)) {
-                BigDecimal totalContributionAmount = BigDecimal.valueOf(ajoGroup.getContributionAmount());
+                BigDecimal totalContributionAmount = BigDecimal.valueOf(ajoGroup.getEstimatedCollection());
                 BigDecimal interestRate = BigDecimal.valueOf(0.05);
 
                 Set<Integer> paidSlots = new HashSet<>();
@@ -246,10 +246,9 @@ public class AjoGroupServiceImpl implements AjoGroupService {
                         defaultedUsersRepository.save(defaultedUser);
                         defaultedUsers.add(user);
                     } else {
-                        BigDecimal userPayment = totalContributionAmount.multiply(BigDecimal.valueOf(user.getAjoSlot()));
 
-                        BigDecimal interestDeduction = userPayment.multiply(interestRate);
-                        BigDecimal finalPayment = userPayment.subtract(interestDeduction);
+                        BigDecimal interestDeduction = totalContributionAmount.multiply(interestRate);
+                        BigDecimal finalPayment = totalContributionAmount.subtract(interestDeduction);
 
                         BigDecimal updatedGlobalWallet = user.getGlobalWallet().add(finalPayment);
                         user.setGlobalWallet(updatedGlobalWallet);

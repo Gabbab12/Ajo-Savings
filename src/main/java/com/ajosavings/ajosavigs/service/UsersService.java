@@ -6,6 +6,8 @@ import com.ajosavings.ajosavigs.exception.ResourceNotFoundException;
 import com.ajosavings.ajosavigs.models.PasswordToken;
 import com.ajosavings.ajosavigs.models.Users;
 import jakarta.mail.MessagingException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -26,7 +28,10 @@ public interface UsersService {
     ResponseEntity<String> updateProfilePicture(String profilePicture, String username);
     ResponseEntity<String> updateUserDetails(ProfileUpdateDto profileUpdateDto);
 
-    ResponseEntity<Long> getAllUsers(Authentication authentication);
+    ResponseEntity<Long> getTotalNumberOfUsers(Authentication authentication);
     long countNewUsers();
 
+    Page<Users> getAllUsers(Pageable pageable);
+
+    Page<Users> getAllActiveUsers(Pageable pageable);
 }

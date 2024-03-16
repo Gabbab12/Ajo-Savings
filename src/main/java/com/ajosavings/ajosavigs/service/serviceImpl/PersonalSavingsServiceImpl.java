@@ -2,6 +2,7 @@ package com.ajosavings.ajosavigs.service.serviceImpl;
 
 import com.ajosavings.ajosavigs.dto.request.PersonalSavingsDto;
 import com.ajosavings.ajosavigs.enums.TransactionType;
+import com.ajosavings.ajosavigs.enums.UserStatus;
 import com.ajosavings.ajosavigs.exception.AccessDeniedException;
 import com.ajosavings.ajosavigs.exception.InsufficientFundsException;
 import com.ajosavings.ajosavigs.models.PersonalSavings;
@@ -50,6 +51,9 @@ public class PersonalSavingsServiceImpl implements PersonalSavingsService {
         personalSavings.setDaysLeft(daysLeft);
 
         personalSavingsRepository.save(personalSavings);
+        user.setStatus(UserStatus.ACTIVE);
+        userRepository.save(user);
+
         log.info("Savings successfully created");
         log.info(String.valueOf(personalSavings));
         return ResponseEntity.status(HttpStatus.CREATED).body(personalSavings);

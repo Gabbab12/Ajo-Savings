@@ -2,6 +2,7 @@ package com.ajosavings.ajosavigs.controller;
 
 import com.ajosavings.ajosavigs.dto.request.SignUpRequest;
 import com.ajosavings.ajosavigs.dto.request.VerifyDTO;
+import com.ajosavings.ajosavigs.enums.UserStatus;
 import com.ajosavings.ajosavigs.models.PasswordToken;
 import com.ajosavings.ajosavigs.models.Users;
 import com.ajosavings.ajosavigs.repository.PasswordTokenRepository;
@@ -48,15 +49,15 @@ import java.time.LocalDateTime;
 
         PasswordToken passwordToken = passwordTokenRepository.findByUsernameAndVerificationToken(verifyDTO.getUsername(), verifyDTO.getOtp());
 
-//        if (passwordToken != null && passwordToken.getIsValid() && !passwordToken.getExpirationTime().isBefore(LocalDateTime.now().plusMinutes(5))) {
-            log.info("b");
             passwordToken.setIsValid(false);
             passwordTokenRepository.save(passwordToken);
+
+            user.setStatus(UserStatus.VERIFIED);
+            user.updateEnabledStatus();
+            userRepository.save(user);
+
+            log.info("User verified successfully");
             return new ResponseEntity<>("OTP verified successfully", HttpStatus.OK);
-//        } else {
-//            log.info("c");
-//            return new ResponseEntity<>("Invalid or expired OTP", HttpStatus.BAD_REQUEST);
-//        }
     }
 
 }
