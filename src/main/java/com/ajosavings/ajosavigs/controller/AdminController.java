@@ -1,11 +1,13 @@
 package com.ajosavings.ajosavigs.controller;
 
 import com.ajosavings.ajosavigs.models.GroupTransactionHistory;
+import com.ajosavings.ajosavigs.models.Users;
 import com.ajosavings.ajosavigs.service.serviceImpl.AjoGroupServiceImpl;
 import com.ajosavings.ajosavigs.service.serviceImpl.PersonalSavingsServiceImpl;
 import com.ajosavings.ajosavigs.service.serviceImpl.TransactionServiceImpl;
 import com.ajosavings.ajosavigs.service.serviceImpl.UsersServiceImpl;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -18,12 +20,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.webjars.NotFoundException;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("api/v1/admin")
 @PreAuthorize("hasRole('ADMIN')")
+@Slf4j
 public class AdminController {
 
     private final PersonalSavingsServiceImpl savingsService;
@@ -51,9 +53,9 @@ public class AdminController {
         return ajoGroupService.getTotalContributions(authentication);
     }
 
-    @GetMapping("/get-all-users")
+    @GetMapping("/get-total-users-number")
     public ResponseEntity<Long> getAllUsersNumber(Authentication authentication) {
-        return usersService.getAllUsers(authentication);
+        return usersService.getTotalNumberOfUsers(authentication);
     }
 
     @GetMapping("/get-new-created-group")
@@ -103,7 +105,16 @@ public class AdminController {
         }
         return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
-
+    @GetMapping("/get-all-users")
+    public ResponseEntity<Page<Users>> getAllUsers(@PageableDefault(size = 15, page = 0) Pageable pageable){
+        Page<Users> usersPage = usersService.getAllUsers(pageable);
+        return ResponseEntity.ok(usersPage);
+    }
+    @GetMapping("get-all-active-users")
+    public ResponseEntity<Page<Users>> getAllActiveUsers(@PageableDefault(page = 0, size = 15) Pageable pageable){
+        Page<Users> activeUsers = usersService.getAllActiveUsers(pageable);
+        return ResponseEntity.ok(activeUsers);
+    }
 }
 
 

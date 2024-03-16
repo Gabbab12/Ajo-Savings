@@ -2,6 +2,7 @@ package com.ajosavings.ajosavigs.service.serviceImpl;
 
 import com.ajosavings.ajosavigs.configuration.PasswordConfig;
 import com.ajosavings.ajosavigs.enums.Role;
+import com.ajosavings.ajosavigs.enums.UserStatus;
 import com.ajosavings.ajosavigs.models.Users;
 import com.ajosavings.ajosavigs.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,8 @@ public class AdminSeeder implements ApplicationListener<ApplicationReadyEvent> {
         admin.setPhoneNumber("08137354549");
         admin.setPassword(passwordConfig.passwordEncoder().encode("Admin12@"));
         admin.setRole(Role.ADMIN);
+        admin.setStatus(UserStatus.ACTIVE);
+        admin.setIsEnabled(true);
 
         userRepository.save(admin);
     }

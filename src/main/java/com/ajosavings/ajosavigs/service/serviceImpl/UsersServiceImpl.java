@@ -6,6 +6,7 @@ import com.ajosavings.ajosavigs.configuration.PasswordConfig;
 import com.ajosavings.ajosavigs.dto.request.*;
 import com.ajosavings.ajosavigs.dto.response.AuthenticationResponse;
 import com.ajosavings.ajosavigs.enums.Role;
+import com.ajosavings.ajosavigs.enums.UserStatus;
 import com.ajosavings.ajosavigs.exception.*;
 import com.ajosavings.ajosavigs.models.PasswordToken;
 import com.ajosavings.ajosavigs.models.Users;
@@ -16,6 +17,8 @@ import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -62,6 +65,7 @@ public class UsersServiceImpl implements UsersService {
         user.setPhoneNumber(signUpRequest.getPhoneNumber());
         user.setProfilePicture("https://res.cloudinary.com/dpfqbb9pl/image/upload/v1708720135/gender_neutral_avatar_ruxcpg.jpg");
         user.setRole(Role.USERS);
+        user.setStatus(UserStatus.PENDING_ACTIVATION);
         log.info(String.valueOf(user));
         userRepository.save(user);
 
@@ -200,6 +204,10 @@ public class UsersServiceImpl implements UsersService {
         Users users = userRepository.findByUsernameIgnoreCase(request.getUsername())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + request.getUsername()));
 
+        if (!users.isEnabled()) {
+            throw new BadCredentialsException("User account is not yet verified or active");
+        }
+
         String jwtToken = jwtService.generateToken(users);
 
         AuthenticationResponse response = new AuthenticationResponse();
@@ -211,12 +219,8 @@ public class UsersServiceImpl implements UsersService {
 
     @Override
     public ResponseEntity<Users> getUser(String email) {
-        Users users = userRepository
-                .findByUsername(email);
-
-        return ResponseEntity.ok(
-               users
-        );
+        Users users = userRepository.findByUsername(email);
+        return ResponseEntity.ok(users);
     }
 
     @Override
@@ -281,7 +285,7 @@ public class UsersServiceImpl implements UsersService {
         return ResponseEntity.status(HttpStatus.OK).body("Profile updated successfully.");
     }
     @Override
-    public ResponseEntity<Long> getAllUsers(Authentication authentication){
+    public ResponseEntity<Long> getTotalNumberOfUsers(Authentication authentication){
         if (authentication != null && authentication.isAuthenticated()){
             for (GrantedAuthority authority : authentication.getAuthorities()){
                 if (authority.getAuthority().equals("ADMIN")){
@@ -300,5 +304,29 @@ public class UsersServiceImpl implements UsersService {
         LocalDateTime endTime = LocalDateTime.now();
 
         return userRepository.countByCreatedAtBetween(startTime, endTime);
+    }
+    @Override
+    public Page<Users> getAllUsers(Pageable pageable){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication != null && authentication.isAuthenticated()){
+                for (GrantedAuthority authority : authentication.getAuthorities()){
+                    if (authority.getAuthority().equals("ADMIN")){
+                        return userRepository.findAll(pageable);
+                    }
+                }
+            }
+        throw new AccessDeniedException("User is not authorized to access this resource", HttpStatus.UNAUTHORIZED);
+    }
+    @Override
+    public Page<Users> getAllActiveUsers(Pageable pageable){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated()){
+            for (GrantedAuthority authority : authentication.getAuthorities()){
+                if (authority.getAuthority().equals("ADMIN")){
+                    return userRepository.findByStatus(UserStatus.ACTIVE, pageable);
+                }
+            }
+        }
+        throw new AccessDeniedException("User is not authorized to access this resource", HttpStatus.UNAUTHORIZED);
     }
 }

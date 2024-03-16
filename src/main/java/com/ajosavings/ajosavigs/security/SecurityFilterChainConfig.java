@@ -56,7 +56,7 @@ public class SecurityFilterChainConfig {
                                 .requestMatchers("/api/v1/**").permitAll()
                                 .requestMatchers("/api/v1/signup/verify-otp").permitAll()
                                 .requestMatchers("/api/v1/auth/**", "/update/**", "api/ajoGroup/**").permitAll()
-                                .requestMatchers(POST,"registered-user","/logout").authenticated()
+                                .requestMatchers(POST,"/api/v1/auth/registered-user","/api/v1/auth/logout").authenticated()
                                 .requestMatchers(HttpMethod.POST, "/api/v1/signup/normal", "api/v1/auth/forgot").permitAll()
                                 .requestMatchers(HttpMethod.POST, "/api/v1/signup/google").permitAll()
                                 .requestMatchers(HttpMethod.POST, "api/v1/user/**").permitAll()
