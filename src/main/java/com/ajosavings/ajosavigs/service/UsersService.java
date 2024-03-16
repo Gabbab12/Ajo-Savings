@@ -34,4 +34,6 @@ public interface UsersService {
     Page<Users> getAllUsers(Pageable pageable);
 
     Page<Users> getAllActiveUsers(Pageable pageable);
+
+    Page<Users> getAllNewUsers(Pageable pageable);
 }

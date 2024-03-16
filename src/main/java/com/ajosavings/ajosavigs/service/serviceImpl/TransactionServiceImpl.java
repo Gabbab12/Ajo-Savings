@@ -3,6 +3,7 @@ package com.ajosavings.ajosavigs.service.serviceImpl;
 import com.ajosavings.ajosavigs.dto.request.DepositDto;
 import com.ajosavings.ajosavigs.dto.request.TransactionRequest;
 import com.ajosavings.ajosavigs.enums.TransactionType;
+import com.ajosavings.ajosavigs.enums.UserStatus;
 import com.ajosavings.ajosavigs.models.TransactionHistory;
 import com.ajosavings.ajosavigs.models.TransactionOtp;
 import com.ajosavings.ajosavigs.models.Users;
@@ -179,6 +180,7 @@ public class TransactionServiceImpl implements TransactionService {
 
         updateWalletBalance(transactionOtp1.getAmount(), transactionOtp1.getUsers());
 
+        users.setStatus(UserStatus.ACTIVE);
         userRepository.save(users);
 
         return new ResponseEntity<>("OTP verification successful", HttpStatus.OK);

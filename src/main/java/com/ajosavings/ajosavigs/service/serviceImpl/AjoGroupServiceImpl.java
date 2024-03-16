@@ -145,6 +145,7 @@ public class AjoGroupServiceImpl implements AjoGroupService {
         int allocatedSlot = ajoGroup.getAvailableSlots().remove(randomIndex);
 
         user.setAjoSlot(allocatedSlot);
+        user.setStatus(UserStatus.ACTIVE);
 
         ajoGroup.getUsers().add(user);
         ajoGroup.setAvailableSlots(updateAvailableSlots(ajoGroup));

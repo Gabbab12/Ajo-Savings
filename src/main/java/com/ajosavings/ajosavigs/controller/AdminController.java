@@ -115,6 +115,11 @@ public class AdminController {
         Page<Users> activeUsers = usersService.getAllActiveUsers(pageable);
         return ResponseEntity.ok(activeUsers);
     }
+    @GetMapping("/get-new-users")
+    public ResponseEntity<Page<Users>> getAllNewUsers(@PageableDefault(page = 0, size = 15) Pageable pageable){
+        Page<Users> newUsers = usersService.getAllNewUsers(pageable);
+        return ResponseEntity.ok(newUsers);
+    }
 }
 
 

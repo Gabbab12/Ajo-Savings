@@ -284,11 +284,12 @@ public class UsersServiceImpl implements UsersService {
 
         return ResponseEntity.status(HttpStatus.OK).body("Profile updated successfully.");
     }
+
     @Override
-    public ResponseEntity<Long> getTotalNumberOfUsers(Authentication authentication){
-        if (authentication != null && authentication.isAuthenticated()){
-            for (GrantedAuthority authority : authentication.getAuthorities()){
-                if (authority.getAuthority().equals("ADMIN")){
+    public ResponseEntity<Long> getTotalNumberOfUsers(Authentication authentication) {
+        if (authentication != null && authentication.isAuthenticated()) {
+            for (GrantedAuthority authority : authentication.getAuthorities()) {
+                if (authority.getAuthority().equals("ADMIN")) {
                     long getTotalUsers = userRepository.count();
                     log.info(String.valueOf(getTotalUsers));
                     return ResponseEntity.status(HttpStatus.OK).body(getTotalUsers);
@@ -305,28 +306,44 @@ public class UsersServiceImpl implements UsersService {
 
         return userRepository.countByCreatedAtBetween(startTime, endTime);
     }
+
     @Override
-    public Page<Users> getAllUsers(Pageable pageable){
+    public Page<Users> getAllUsers(Pageable pageable) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (authentication != null && authentication.isAuthenticated()){
-                for (GrantedAuthority authority : authentication.getAuthorities()){
-                    if (authority.getAuthority().equals("ADMIN")){
-                        return userRepository.findAll(pageable);
-                    }
+        if (authentication != null && authentication.isAuthenticated()) {
+            for (GrantedAuthority authority : authentication.getAuthorities()) {
+                if (authority.getAuthority().equals("ADMIN")) {
+                    return userRepository.findAll(pageable);
                 }
             }
+        }
         throw new AccessDeniedException("User is not authorized to access this resource", HttpStatus.UNAUTHORIZED);
     }
+
     @Override
-    public Page<Users> getAllActiveUsers(Pageable pageable){
+    public Page<Users> getAllActiveUsers(Pageable pageable) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.isAuthenticated()){
-            for (GrantedAuthority authority : authentication.getAuthorities()){
-                if (authority.getAuthority().equals("ADMIN")){
+        if (authentication != null && authentication.isAuthenticated()) {
+            for (GrantedAuthority authority : authentication.getAuthorities()) {
+                if (authority.getAuthority().equals("ADMIN")) {
                     return userRepository.findByStatus(UserStatus.ACTIVE, pageable);
                 }
             }
         }
         throw new AccessDeniedException("User is not authorized to access this resource", HttpStatus.UNAUTHORIZED);
+    }
+
+    @Override
+    public Page<Users> getAllNewUsers(Pageable pageable) {
+        LocalDateTime startTime = LocalDateTime.now().minusHours(24);
+        LocalDateTime endTime = LocalDateTime.now();
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated() && authentication.getAuthorities().stream()
+                .anyMatch(authority -> authority.getAuthority().equals("ADMIN"))) {
+            return userRepository.findByCreatedAtBetween(startTime, endTime, pageable);
+        } else {
+            throw new AccessDeniedException("User is not authorized to access this resource", HttpStatus.UNAUTHORIZED);
+        }
     }
 }
