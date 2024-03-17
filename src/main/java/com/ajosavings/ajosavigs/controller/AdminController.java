@@ -1,5 +1,7 @@
 package com.ajosavings.ajosavigs.controller;
 
+import com.ajosavings.ajosavigs.exception.BadRequestException;
+import com.ajosavings.ajosavigs.models.DefaultedUsers;
 import com.ajosavings.ajosavigs.models.GroupTransactionHistory;
 import com.ajosavings.ajosavigs.models.Users;
 import com.ajosavings.ajosavigs.service.serviceImpl.AjoGroupServiceImpl;
@@ -32,6 +34,7 @@ public class AdminController {
     private final AjoGroupServiceImpl ajoGroupService;
     private final TransactionServiceImpl transactionService;
     private final UsersServiceImpl usersService;
+
 
     @GetMapping("/total-amount-saved")
     public ResponseEntity<Double> getTotalAmountSaved(Authentication authentication) {
@@ -120,6 +123,28 @@ public class AdminController {
         Page<Users> newUsers = usersService.getAllNewUsers(pageable);
         return ResponseEntity.ok(newUsers);
     }
+
+    @GetMapping("/defaultedUsers")
+    public ResponseEntity<Page<DefaultedUsers>> getAllDefaultedUsers(Pageable pageable) {
+        try {
+            Page<DefaultedUsers> defaultedUsersPage = usersService.getAllDefaultedUsers(pageable);
+            return ResponseEntity.ok().body(defaultedUsersPage);
+        } catch (BadRequestException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+    }
+
+    @GetMapping("/defaultedUsers/count")
+    public ResponseEntity<Long> countNewlyDefaultingUsers() {
+        try {
+            long count = usersService.countNewlyDefaultingUsers();
+            return ResponseEntity.ok().body(count);
+        } catch (BadRequestException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+    }
+
+
 }
 
 
