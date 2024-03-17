@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Data
 @Entity
-public class DefaultedUsers {
+public class DefaultedUsers extends AuditBaseEntity{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -22,4 +22,5 @@ public class DefaultedUsers {
     private String name;
     private String username;
     private LocalDateTime lastLogin;
+
 }

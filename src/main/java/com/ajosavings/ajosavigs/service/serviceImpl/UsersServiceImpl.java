@@ -8,8 +8,10 @@ import com.ajosavings.ajosavigs.dto.response.AuthenticationResponse;
 import com.ajosavings.ajosavigs.enums.Role;
 import com.ajosavings.ajosavigs.enums.UserStatus;
 import com.ajosavings.ajosavigs.exception.*;
+import com.ajosavings.ajosavigs.models.DefaultedUsers;
 import com.ajosavings.ajosavigs.models.PasswordToken;
 import com.ajosavings.ajosavigs.models.Users;
+import com.ajosavings.ajosavigs.repository.DefaultedUsersRepository;
 import com.ajosavings.ajosavigs.repository.PasswordTokenRepository;
 import com.ajosavings.ajosavigs.repository.UserRepository;
 import com.ajosavings.ajosavigs.service.UsersService;
@@ -50,6 +52,8 @@ public class UsersServiceImpl implements UsersService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
+    private final DefaultedUsersRepository defaultedUsersRepository;
+
 
     @Override
     public Users signUp(SignUpRequest signUpRequest) {
@@ -345,5 +349,27 @@ public class UsersServiceImpl implements UsersService {
         } else {
             throw new AccessDeniedException("User is not authorized to access this resource", HttpStatus.UNAUTHORIZED);
         }
+    }
+
+    @Override
+    public Page<DefaultedUsers> getAllDefaultedUsers(Pageable pageable){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated() && authentication.getAuthorities().stream()
+                .anyMatch(authority -> authority.getAuthority().equals("ADMIN"))){
+            return defaultedUsersRepository.findAll(pageable);
+        }
+        throw new BadRequestException("You are not allowed to access this page", HttpStatus.BAD_REQUEST);
+    }
+    @Override
+    public long countNewlyDefaultingUsers(){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated() && authentication.getAuthorities().stream()
+                .anyMatch(authority -> authority.getAuthority().equals("ADMIN"))) {
+            LocalDateTime startTime = LocalDateTime.now().minusHours(24);
+            LocalDateTime endTime = LocalDateTime.now();
+
+            return defaultedUsersRepository.countByCreatedAtBetween(startTime,endTime);
+        }
+        throw new BadRequestException("you are not allowed to view this page", HttpStatus.BAD_REQUEST);
     }
 }
