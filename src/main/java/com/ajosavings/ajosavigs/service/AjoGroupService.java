@@ -47,5 +47,11 @@ public interface AjoGroupService {
     Page<GroupTransactionHistory> getGroupReceivedTransactions(Long groupId, Pageable pageable);
 
     Page<GroupTransactionHistory> getGroupSentTransactions(Long groupId, Pageable pageable);
+
+    @Transactional
+    ResponseEntity<AjoGroup> updateAjoGroup(Long ajoGroupId, AjoGroupDTO updatedAjoGroupDTO);
+
+    @Transactional
+    ResponseEntity<Void> deleteAjoGroup(Long ajoGroupId);
 }
 
