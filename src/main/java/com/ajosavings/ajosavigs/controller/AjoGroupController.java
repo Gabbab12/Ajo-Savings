@@ -91,4 +91,15 @@ public class AjoGroupController {
         Page<GroupTransactionHistory> transactionHistoryPage = ajoGroupService.getGroupTransactionHistory(groupId, authentication, pageable);
         return ResponseEntity.ok(transactionHistoryPage);
     }
+
+
+    @PutMapping("/update-group/{ajoGroupId}")
+    public ResponseEntity<AjoGroup> editAjoGroup(@PathVariable Long ajoGroupId, @RequestBody AjoGroupDTO updatedAjoGroupDTO){
+        return ajoGroupService.updateAjoGroup(ajoGroupId,updatedAjoGroupDTO);
+    }
+
+    @DeleteMapping("delete-group/{ajoGroupId}")
+    public ResponseEntity<?> deleteAjoGroup(@PathVariable Long ajoGroupId){
+        return ajoGroupService.deleteAjoGroup(ajoGroupId);
+    }
 }

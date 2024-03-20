@@ -3,9 +3,7 @@ package com.ajosavings.ajosavigs.service.serviceImpl;
 import com.ajosavings.ajosavigs.dto.request.AjoGroupDTO;
 import com.ajosavings.ajosavigs.dto.request.ContributionFlowDto;
 import com.ajosavings.ajosavigs.enums.*;
-import com.ajosavings.ajosavigs.exception.AccessDeniedException;
-import com.ajosavings.ajosavigs.exception.BadRequestException;
-import com.ajosavings.ajosavigs.exception.InsufficientFundsException;
+import com.ajosavings.ajosavigs.exception.*;
 import com.ajosavings.ajosavigs.models.*;
 import com.ajosavings.ajosavigs.repository.*;
 import com.ajosavings.ajosavigs.service.AjoGroupService;
@@ -440,4 +438,40 @@ public class AjoGroupServiceImpl implements AjoGroupService {
                 .orElseThrow(() -> new ResourceNotFoundException("AjoGroup with id " + groupId + " not found"));
         return groupTransactionHistoryRepo.findByAjoGroupAndStatus(ajoGroup, GroupTransactionStatus.SENT, pageable);
     }
+    @Override
+    @Transactional
+    public ResponseEntity<AjoGroup> updateAjoGroup(Long ajoGroupId, AjoGroupDTO updatedAjoGroupDTO) {
+
+        AjoGroup existingAjoGroup = ajoGroupRepository.findById(ajoGroupId)
+                .orElseThrow(() -> new BadRequestException("AjoGroup not found with id",HttpStatus.BAD_REQUEST));
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Users currentUser = (Users) authentication.getPrincipal();
+
+        existingAjoGroup.setGroupName(updatedAjoGroupDTO.getGroupName());
+
+        AjoGroup updatedAjoGroup = ajoGroupRepository.save(existingAjoGroup);
+
+        return ResponseEntity.ok(updatedAjoGroup);
+    }
+
+    @Override
+    @Transactional
+    public ResponseEntity<Void> deleteAjoGroup(Long ajoGroupId) {
+
+        AjoGroup ajoGroup = ajoGroupRepository.findById(ajoGroupId)
+                .orElseThrow(() -> new NotFoundException("AjoGroup not found with id",HttpStatus.NOT_FOUND));
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Users currentUser = (Users) authentication.getPrincipal();
+
+        if (!currentUser.getRole().equals(Role.ADMIN)) {
+            throw new ForbiddenException("Only admin users can delete AjoGroups",HttpStatus.FORBIDDEN);
+        }
+
+        ajoGroupRepository.deleteById(ajoGroupId);
+
+        return ResponseEntity.status(HttpStatus.OK).build();
+    }
+
 }
