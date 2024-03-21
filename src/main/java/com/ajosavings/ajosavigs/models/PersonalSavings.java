@@ -29,6 +29,7 @@ public class PersonalSavings extends AuditBaseEntity{
     @DecimalMin(value = "0.00", inclusive = true, message = "Wallet balance must be at least 0.00")
     private BigDecimal amountSaved = BigDecimal.ZERO;
     private long daysLeft;
+    private String profilePicture;
 
     @ManyToOne
     @JoinColumn(name = "users_id")

@@ -15,4 +15,5 @@ public class PersonalSavingsDto {
     private PaymentPeriod frequency;
     private LocalDate startDate;
     private LocalDate withdrawalDate;
+    private String profilePicture;
 }
