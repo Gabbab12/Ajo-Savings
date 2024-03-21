@@ -1,6 +1,7 @@
 package com.ajosavings.ajosavigs.service.serviceImpl;
 
 import com.ajosavings.ajosavigs.dto.request.PersonalSavingsDto;
+import com.ajosavings.ajosavigs.dto.response.SavingsPage;
 import com.ajosavings.ajosavigs.enums.TransactionType;
 import com.ajosavings.ajosavigs.enums.UserStatus;
 import com.ajosavings.ajosavigs.exception.AccessDeniedException;
@@ -177,9 +178,18 @@ public class PersonalSavingsServiceImpl implements PersonalSavingsService {
         return personalSavingsRepository.findById(savingId).orElseThrow(()-> new ResourceNotFoundException("Goal not found for saving ID: " + savingId));
     }
     @Override
-    public Page<PersonalSavings> getAllSavings(Users user, int page, int size){
+    public SavingsPage getAllSavings(Users user, int page, int size){
         PageRequest pageRequest = PageRequest.of(page, size);
-        return personalSavingsRepository.findByUsers(user, pageRequest);
+        Page<PersonalSavings> personalSavingsPage = personalSavingsRepository.findByUsers(user, pageRequest);
+
+        return SavingsPage.builder()
+                .content(personalSavingsPage.getContent())
+                .pageNo(personalSavingsPage.getNumber())
+                .pageSize(personalSavingsPage.getSize())
+                .totalElements(personalSavingsPage.getTotalElements())
+                .totalPages(personalSavingsPage.getTotalPages())
+                .last(personalSavingsPage.isLast())
+                .build();
     }
 
     @Override

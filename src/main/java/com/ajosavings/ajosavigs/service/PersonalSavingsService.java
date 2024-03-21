@@ -1,6 +1,7 @@
 package com.ajosavings.ajosavigs.service;
 
 import com.ajosavings.ajosavigs.dto.request.PersonalSavingsDto;
+import com.ajosavings.ajosavigs.dto.response.SavingsPage;
 import com.ajosavings.ajosavigs.models.PersonalSavings;
 import com.ajosavings.ajosavigs.models.Users;
 import org.springframework.data.domain.Page;
@@ -18,7 +19,7 @@ public interface PersonalSavingsService {
 
     PersonalSavings viewGoal(Long savingId);
 
-    Page<PersonalSavings> getAllSavings(Users user, int page, int size);
+    SavingsPage getAllSavings(Users user, int page, int size);
 
     ResponseEntity<Double> getTotalAmountSaved(Authentication authentication);
 }

@@ -3,6 +3,7 @@ package com.ajosavings.ajosavigs.controller;
 import com.ajosavings.ajosavigs.dto.request.DepositDto;
 import com.ajosavings.ajosavigs.dto.request.PersonalSavingsDto;
 import com.ajosavings.ajosavigs.dto.request.TransactionRequest;
+import com.ajosavings.ajosavigs.dto.response.SavingsPage;
 import com.ajosavings.ajosavigs.exception.ResourceNotFoundException;
 import com.ajosavings.ajosavigs.models.PersonalSavings;
 import com.ajosavings.ajosavigs.models.Users;
@@ -63,12 +64,13 @@ public class PersonalSavingsController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
     @GetMapping("/explore-savings")
-    public ResponseEntity<Page<PersonalSavings>> getAllSavings(@RequestParam(defaultValue = "0") int page,
+    public ResponseEntity<SavingsPage> getAllSavings(@RequestParam(defaultValue = "0") int page,
                                                          @RequestParam(defaultValue = "10") int size){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Users users = (Users) authentication.getPrincipal();
-        Page<PersonalSavings> allSavings = savingsService.getAllSavings(users, page, size);
+        SavingsPage allSavings = savingsService.getAllSavings(users, page, size);
         return ResponseEntity.status(HttpStatus.OK).body(allSavings);
     }
 }
