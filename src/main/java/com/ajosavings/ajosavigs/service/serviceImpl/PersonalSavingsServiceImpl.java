@@ -1,6 +1,7 @@
 package com.ajosavings.ajosavigs.service.serviceImpl;
 
 import com.ajosavings.ajosavigs.dto.request.PersonalSavingsDto;
+import com.ajosavings.ajosavigs.dto.response.SavingsPage;
 import com.ajosavings.ajosavigs.enums.TransactionType;
 import com.ajosavings.ajosavigs.enums.UserStatus;
 import com.ajosavings.ajosavigs.exception.AccessDeniedException;
@@ -56,8 +57,8 @@ public class PersonalSavingsServiceImpl implements PersonalSavingsService {
 
         log.info("Savings successfully created");
         log.info(String.valueOf(personalSavings));
-        return ResponseEntity.status(HttpStatus.CREATED).body(personalSavings);
 
+        return ResponseEntity.status(HttpStatus.CREATED).body(personalSavings);
     }
 
     public PersonalSavings mapToEntity(PersonalSavingsDto savingsDto) {
@@ -185,9 +186,18 @@ public class PersonalSavingsServiceImpl implements PersonalSavingsService {
     }
 
     @Override
-    public Page<PersonalSavings> getAllSavings(Users user, int page, int size) {
+    public SavingsPage getAllSavings(Users user, int page, int size){
         PageRequest pageRequest = PageRequest.of(page, size);
-        return personalSavingsRepository.findByUsers(user, pageRequest);
+        Page<PersonalSavings> personalSavingsPage = personalSavingsRepository.findByUsers(user, pageRequest);
+
+        return SavingsPage.builder()
+                .content(personalSavingsPage.getContent())
+                .pageNo(personalSavingsPage.getNumber())
+                .pageSize(personalSavingsPage.getSize())
+                .totalElements(personalSavingsPage.getTotalElements())
+                .totalPages(personalSavingsPage.getTotalPages())
+                .last(personalSavingsPage.isLast())
+                .build();
     }
 
     @Override

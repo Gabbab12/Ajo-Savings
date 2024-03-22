@@ -6,6 +6,7 @@ import com.ajosavings.ajosavigs.models.Users;
 import com.ajosavings.ajosavigs.repository.KycUpdateRepository;
 import com.ajosavings.ajosavigs.service.KycUpdateService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -40,5 +41,19 @@ public class KycUpdateServiceImpl implements KycUpdateService {
 
         kycUpdateRepository.save(kycUpdates);
         return kycUpdates;
+    }
+
+    @Override
+    public ResponseEntity<String> getKyc() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Users user = (Users) authentication.getPrincipal();
+
+        Optional<KYCUpdates> kycUpdates = kycUpdateRepository.findByUsers(user);
+
+        if (kycUpdates.isEmpty()) {
+            return ResponseEntity.ok("no");
+        } else {
+            return ResponseEntity.ok("yes");
+        }
     }
 }
