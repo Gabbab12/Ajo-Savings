@@ -9,10 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 
@@ -26,8 +23,12 @@ public class KycUpdatesController {
 
     @PostMapping("/kyc-update")
     public ResponseEntity<String> kycUpate(@RequestBody KycUpdateDTO kycUpdateDTO) throws IOException {
-        log.info("i was here");
         kycUpdateService.kycUpdates(kycUpdateDTO);
         return new ResponseEntity<>("KYC update successful", HttpStatus.CREATED);
+    }
+
+    @GetMapping("/getKyc")
+    public ResponseEntity<String> getKyc() {
+        return kycUpdateService.getKyc();
     }
 }
