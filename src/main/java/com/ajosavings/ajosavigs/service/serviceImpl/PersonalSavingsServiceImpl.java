@@ -57,8 +57,8 @@ public class PersonalSavingsServiceImpl implements PersonalSavingsService {
 
         log.info("Savings successfully created");
         log.info(String.valueOf(personalSavings));
-        return ResponseEntity.status(HttpStatus.CREATED).body(personalSavings);
 
+        return ResponseEntity.status(HttpStatus.CREATED).body(personalSavings);
     }
 
     public PersonalSavings mapToEntity(PersonalSavingsDto savingsDto) {
@@ -68,6 +68,7 @@ public class PersonalSavingsServiceImpl implements PersonalSavingsService {
         personalSavings.setFrequency(savingsDto.getFrequency());
         personalSavings.setStartDate(savingsDto.getStartDate());
         personalSavings.setWithdrawalDate(savingsDto.getWithdrawalDate());
+        personalSavings.setProfilePicture(savingsDto.getProfilePicture());
 
         return personalSavings;
     }
@@ -138,12 +139,17 @@ public class PersonalSavingsServiceImpl implements PersonalSavingsService {
             throw new ResourceNotFoundException("Savings not found with ID: " + personalSavingsId);
         }
 
-        try {
-            PersonalSavings personalSavings = optionalPersonalSavings.get();
-            if (!personalSavings.getUsers().equals(users)) {
-                throw new AccessDeniedException("You are not authorized to add money to this savings", HttpStatus.UNAUTHORIZED);
-            }
+        PersonalSavings personalSavings = optionalPersonalSavings.get();
+        if (!personalSavings.getUsers().equals(users)) {
+            throw new AccessDeniedException("You are not authorized to add money to this savings", HttpStatus.UNAUTHORIZED);
+        }
 
+        BigDecimal totalAmountNeeded = amount.subtract(users.getGlobalWallet());
+        if (totalAmountNeeded.compareTo(BigDecimal.ZERO) > 0) {
+            throw new InsufficientFundsException("Insufficient funds in global wallet to add to savings", HttpStatus.BAD_REQUEST);
+        }
+
+        try {
             BigDecimal updatedAmountSaved = personalSavings.getAmountSaved().add(amount);
             personalSavings.setAmountSaved(updatedAmountSaved);
             personalSavingsRepository.save(personalSavings);
@@ -163,6 +169,7 @@ public class PersonalSavingsServiceImpl implements PersonalSavingsService {
             throw new RuntimeException("Failed to add money to savings wallet.", e);
         }
     }
+
     private void saveTransactionHistory(BigDecimal amount, String name, TransactionType type, Users user) {
         TransactionHistory transactionHistory = new TransactionHistory();
         transactionHistory.setAmount(amount);
@@ -175,8 +182,9 @@ public class PersonalSavingsServiceImpl implements PersonalSavingsService {
 
     @Override
     public PersonalSavings viewGoal(Long savingId) {
-        return personalSavingsRepository.findById(savingId).orElseThrow(()-> new ResourceNotFoundException("Goal not found for saving ID: " + savingId));
+        return personalSavingsRepository.findById(savingId).orElseThrow(() -> new ResourceNotFoundException("Goal not found for saving ID: " + savingId));
     }
+
     @Override
     public SavingsPage getAllSavings(Users user, int page, int size){
         PageRequest pageRequest = PageRequest.of(page, size);
@@ -193,13 +201,13 @@ public class PersonalSavingsServiceImpl implements PersonalSavingsService {
     }
 
     @Override
-    public ResponseEntity<Double> getTotalAmountSaved(Authentication authentication){
-        if (authentication != null && authentication.isAuthenticated()){
-            for (GrantedAuthority authority : authentication.getAuthorities()){
-                if (authority.getAuthority().equals("ADMIN")){
+    public ResponseEntity<Double> getTotalAmountSaved(Authentication authentication) {
+        if (authentication != null && authentication.isAuthenticated()) {
+            for (GrantedAuthority authority : authentication.getAuthorities()) {
+                if (authority.getAuthority().equals("ADMIN")) {
                     List<Users> usersList = userRepository.findAll();
                     double totalAmountSaved = 0.0;
-                    for (Users users : usersList){
+                    for (Users users : usersList) {
                         totalAmountSaved += users.getGlobalWallet().doubleValue();
                     }
                     log.info("Total amount saved: {}", totalAmountSaved);
