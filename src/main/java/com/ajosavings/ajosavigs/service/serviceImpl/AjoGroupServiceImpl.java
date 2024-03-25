@@ -474,4 +474,27 @@ public class AjoGroupServiceImpl implements AjoGroupService {
         return ResponseEntity.status(HttpStatus.OK).build();
     }
 
+    @Override
+    public ResponseEntity<AjoGroup> enableAjoGroup(Long ajoGroupId) {
+        Optional<AjoGroup> optionalAjoGroup = ajoGroupRepository.findById(ajoGroupId);
+        if (optionalAjoGroup.isEmpty()) {
+            throw new ResourceNotFoundException("AjoGroup with id " + ajoGroupId + " does not exist");
+        }
+        AjoGroup ajoGroup = optionalAjoGroup.get();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (!isAdmin(authentication)) {
+            throw new AccessDeniedException("Only admin users can enable Ajo groups", HttpStatus.FORBIDDEN);
+        }
+
+        ajoGroup.setEnabled(true);
+        ajoGroupRepository.save(ajoGroup);
+
+        return ResponseEntity.ok(ajoGroup);
+    }
+
+    private boolean isAdmin(Authentication authentication) {
+        return authentication != null && authentication.isAuthenticated() &&
+                authentication.getAuthorities().stream()
+                        .anyMatch(a -> a.getAuthority().equals("ADMIN"));
+    }
 }

@@ -53,5 +53,7 @@ public interface AjoGroupService {
 
     @Transactional
     ResponseEntity<Void> deleteAjoGroup(Long ajoGroupId);
+
+    ResponseEntity<AjoGroup> enableAjoGroup(Long ajoGroupId);
 }
 
