@@ -43,12 +43,7 @@ public class PersonalSavingsController {
 
     @PostMapping("/{personalSavingsId}/add-money")
     public ResponseEntity<String> addMoneyToSavings(@PathVariable Long personalSavingsId, @RequestBody DepositDto depositDto) {
-        try {
-            savingsService.addMoneyToSavings(personalSavingsId, depositDto.getAmount());
-            return ResponseEntity.ok("Money successfully added to savings wallet.");
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to add money to savings wallet.");
-        }
+          return savingsService.addMoneyToSavings(personalSavingsId, depositDto.getAmount());
     }
 
     @GetMapping("/{savingId}/goal")

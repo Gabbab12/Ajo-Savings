@@ -10,11 +10,8 @@ public class NotFoundException extends RuntimeException{
     private String message;
     private HttpStatus status;
 
-    public NotFoundException(String message, String message1, String status) {
-        super(message);
-        this.message = message1;
-    }
-
-    public NotFoundException(String ajoGroupNotFoundWithId, HttpStatus httpStatus) {
+    public NotFoundException(String message, HttpStatus status) {
+        this.message = message;
+        this.status = status;
     }
 }

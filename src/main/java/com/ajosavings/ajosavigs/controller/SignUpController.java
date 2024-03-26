@@ -3,6 +3,7 @@ package com.ajosavings.ajosavigs.controller;
 import com.ajosavings.ajosavigs.dto.request.SignUpRequest;
 import com.ajosavings.ajosavigs.dto.request.VerifyDTO;
 import com.ajosavings.ajosavigs.enums.UserStatus;
+import com.ajosavings.ajosavigs.exception.UserAlreadyExistException;
 import com.ajosavings.ajosavigs.models.PasswordToken;
 import com.ajosavings.ajosavigs.models.Users;
 import com.ajosavings.ajosavigs.repository.PasswordTokenRepository;
@@ -31,7 +32,7 @@ import java.time.LocalDateTime;
         try {
             usersService.signUp(signUpRequest);
             return ResponseEntity.ok("signup successful, please proceed to your email for the verification of your account");
-        } catch (Exception e) {
+        } catch (UserAlreadyExistException e) {
             log.info(e.getMessage());
             return ResponseEntity.status(500).body("Error during signup");
         }
@@ -42,7 +43,6 @@ import java.time.LocalDateTime;
         Users user = userRepository.findByUsername(verifyDTO.getUsername());
 
         if (user == null) {
-            log.info("a");
             return new ResponseEntity<>("User not found", HttpStatus.NOT_FOUND);
         }
 

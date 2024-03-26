@@ -3,6 +3,7 @@ package com.ajosavings.ajosavigs.controller;
 import com.ajosavings.ajosavigs.dto.request.AjoGroupDTO;
 import com.ajosavings.ajosavigs.dto.request.ContributionFlowDto;
 import com.ajosavings.ajosavigs.enums.Role;
+import com.ajosavings.ajosavigs.exception.AccessDeniedException;
 import com.ajosavings.ajosavigs.exception.ResourceNotFoundException;
 import com.ajosavings.ajosavigs.models.AjoGroup;
 import com.ajosavings.ajosavigs.models.GroupTransactionHistory;
@@ -41,7 +42,7 @@ public class AjoGroupController {
     public ResponseEntity<AjoGroup> addUserToGroup(@PathVariable Long groupId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            throw new AccessDeniedException("you are not authorized to join this group", HttpStatus.UNAUTHORIZED);
         }
         Users user = (Users) authentication.getPrincipal();
         ResponseEntity<AjoGroup> response = ajoGroupService.addUsers(groupId, user);
@@ -70,7 +71,7 @@ public class AjoGroupController {
     @GetMapping("/{ajoGroupId}/contributions")
     public ResponseEntity<List<ContributionFlowDto>> getContributions(@PathVariable Long ajoGroupId) throws ResourceNotFoundException {
         AjoGroup ajoGroup = ajoGroupRepository.findById(ajoGroupId)
-                .orElseThrow(() -> new ResourceNotFoundException("AjoGroup with id " + ajoGroupId + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("AjoGroup with id " + ajoGroupId + " not found", HttpStatus.NOT_FOUND));
 
         List<ContributionFlowDto> contributions = ajoGroupService.generateContributionsFlow(ajoGroup);
         return ResponseEntity.status(HttpStatus.OK).body(contributions);
@@ -80,7 +81,7 @@ public class AjoGroupController {
     public ResponseEntity<List<AjoGroup>> getGroupsByUserId(@PathVariable Long userId) throws ResourceNotFoundException {
         List<AjoGroup> groups = ajoGroupService.getGroupsByUserId(userId);
         if (groups.isEmpty()) {
-            throw new ResourceNotFoundException("No groups found for user with ID: " + userId);
+            throw new ResourceNotFoundException("No groups found for user with ID: " + userId, HttpStatus.NOT_FOUND);
         }
         return new ResponseEntity<>(groups, HttpStatus.OK);
     }

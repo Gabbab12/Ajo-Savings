@@ -1,6 +1,7 @@
 package com.ajosavings.ajosavigs.controller;
 
 import com.ajosavings.ajosavigs.exception.BadRequestException;
+import com.ajosavings.ajosavigs.models.AjoGroup;
 import com.ajosavings.ajosavigs.models.DefaultedUsers;
 import com.ajosavings.ajosavigs.models.GroupTransactionHistory;
 import com.ajosavings.ajosavigs.models.Users;
@@ -18,10 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -142,6 +140,11 @@ public class AdminController {
         } catch (BadRequestException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
+    }
+
+    @PutMapping("/enable-group/{ajoGroupId}")
+    public ResponseEntity<AjoGroup> enableAjoGroup(@PathVariable Long ajoGroupId) {
+        return ajoGroupService.enableAjoGroup(ajoGroupId);
     }
 
 

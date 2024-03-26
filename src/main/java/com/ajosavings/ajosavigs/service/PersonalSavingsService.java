@@ -15,7 +15,7 @@ public interface PersonalSavingsService {
 
     ResponseEntity<String> withdrawToGlobalWallet(Long savingsId, BigDecimal amount);
 
-    void addMoneyToSavings(Long personalSavingsId, BigDecimal amount);
+    ResponseEntity<String> addMoneyToSavings(Long personalSavingsId, BigDecimal amount);
 
     PersonalSavings viewGoal(Long savingId);
 

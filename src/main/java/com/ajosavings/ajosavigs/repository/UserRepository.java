@@ -26,4 +26,6 @@ public interface UserRepository extends JpaRepository<Users, Long> {
 
     Page<Users> findByCreatedAtBetween(LocalDateTime startTime, LocalDateTime endTime, Pageable pageable);
 
+    boolean existsByUsername(String username);
+
 }

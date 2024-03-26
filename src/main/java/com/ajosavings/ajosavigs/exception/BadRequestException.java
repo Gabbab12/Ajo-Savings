@@ -1,13 +1,11 @@
 package com.ajosavings.ajosavigs.exception;
 
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.http.HttpStatus;
 
-
-@Getter
-@Setter
-
+@Data
 public class BadRequestException extends RuntimeException {
     private String message;
     private String status;
