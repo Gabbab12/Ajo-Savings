@@ -469,7 +469,7 @@ public class AjoGroupServiceImpl implements AjoGroupService {
             throw new ForbiddenException("Only admin users can delete AjoGroups",HttpStatus.FORBIDDEN);
         }
 
-        ajoGroupRepository.deleteById(ajoGroupId);
+        ajoGroupRepository.deleteById(ajoGroup.getId());
 
         return ResponseEntity.status(HttpStatus.OK).build();
     }

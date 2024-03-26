@@ -1,11 +1,11 @@
 package com.ajosavings.ajosavigs.exception;
 
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.http.HttpStatus;
 
-@Setter
-@Getter
+@Data
 public class ForbiddenException extends RuntimeException{
 
     private String message;

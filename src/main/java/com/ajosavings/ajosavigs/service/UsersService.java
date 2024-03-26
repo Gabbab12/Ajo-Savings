@@ -16,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public interface UsersService {
-    Users signUp(SignUpRequest signUpRequest);
+    ResponseEntity<Users> signUp(SignUpRequest signUpRequest);
     PasswordToken forgotPassword(String email) throws MessagingException;
     boolean verifyPasswordToken(String token);
     @Transactional

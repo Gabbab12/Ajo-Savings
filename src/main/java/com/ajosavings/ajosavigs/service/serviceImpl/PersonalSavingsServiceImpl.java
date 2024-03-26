@@ -130,7 +130,7 @@ public class PersonalSavingsServiceImpl implements PersonalSavingsService {
     }
 
     @Override
-    public void addMoneyToSavings(Long personalSavingsId, BigDecimal amount) {
+    public ResponseEntity<String> addMoneyToSavings(Long personalSavingsId, BigDecimal amount) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Users users = (Users) authentication.getPrincipal();
 
@@ -168,6 +168,7 @@ public class PersonalSavingsServiceImpl implements PersonalSavingsService {
         } catch (Exception e) {
             throw new RuntimeException("Failed to add money to savings wallet.", e);
         }
+        return ResponseEntity.status(HttpStatus.OK).body("Money successfully added to savings wallet.");
     }
 
     private void saveTransactionHistory(BigDecimal amount, String name, TransactionType type, Users user) {
