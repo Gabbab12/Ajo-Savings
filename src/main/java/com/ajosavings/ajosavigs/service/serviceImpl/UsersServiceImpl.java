@@ -56,10 +56,13 @@ public class UsersServiceImpl implements UsersService {
 
 
     @Override
-    public Users signUp(SignUpRequest signUpRequest) {
+    public ResponseEntity<Users> signUp(SignUpRequest signUpRequest) {
 
         if (!passwordConfig.validatePassword(signUpRequest.getPassword())) {
-            throw new IllegalArgumentException("Invalid password format");
+            throw new BadRequestException("Invalid password format", HttpStatus.BAD_REQUEST);
+        }
+        if(userRepository.existsByUsername(signUpRequest.getUsername())){
+            throw new UserAlreadyExistException("Username already exists", HttpStatus.BAD_REQUEST);
         }
         Users user = new Users();
         user.setUsername(signUpRequest.getUsername());
@@ -90,7 +93,7 @@ public class UsersServiceImpl implements UsersService {
 
         emailService.sendEmail(user.getUsername(), "VERIFICATION EMAIL", content);
 
-        return user;
+        return ResponseEntity.ok(user);
     }
 
     public String generateOtpToken() {
@@ -141,13 +144,13 @@ public class UsersServiceImpl implements UsersService {
         Optional<PasswordToken> passwordTokenOptional = passwordTokenRepository.findByTokenIgnoreCase(token);
 
         if (passwordTokenOptional.isEmpty()) {
-            throw new ResourceNotFoundException("Invalid or expired reset password token");
+            throw new ResourceNotFoundException("Invalid or expired reset password token", HttpStatus.NOT_FOUND);
         }
         PasswordToken passwordToken = passwordTokenOptional.get();
 
         // Check if the token is still valid and has not expired
         if (!passwordToken.getIsValid() || passwordToken.getExpirationTime().isBefore(LocalDateTime.now())) {
-            throw new ResourceNotFoundException("Invalid or expired reset password token");
+            throw new ResourceNotFoundException("Invalid or expired reset password token", HttpStatus.NOT_FOUND);
         }
         if (!passwordConfig.validatePassword(passwordDTO.getPassword())) {
             throw new BadRequestException("Invalid password format", HttpStatus.BAD_REQUEST);
@@ -173,13 +176,13 @@ public class UsersServiceImpl implements UsersService {
         }
         Users users = targetUser.get();
         if (!oldPasswordIsValid(users, PasswordChangeDTO.getOldPassword())) {
-            throw new IncorrectOldPasswordException("Incorrect old password!");
+            throw new IncorrectOldPasswordException("Incorrect old password!", HttpStatus.BAD_REQUEST);
         }
         if (!PasswordConfig.isValid(PasswordChangeDTO.getNewPassword())) {
             throw new BadRequestException("Invalid password format", HttpStatus.BAD_REQUEST);
         }
         if (!Objects.equals(PasswordChangeDTO.getNewPassword(), PasswordChangeDTO.getConfirmNewPassword())) {
-            throw new PasswordMismatchException("Password does not match!");
+            throw new PasswordMismatchException("Password does not match!", HttpStatus.BAD_REQUEST);
         }
         users.setPassword(passwordEncoder.encode(PasswordChangeDTO.getNewPassword()));
         userRepository.save(users);
