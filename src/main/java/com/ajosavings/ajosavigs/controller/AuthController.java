@@ -49,6 +49,7 @@ public class AuthController {
             return ResponseEntity.badRequest().body("Password token is invalid or expired.");
         }
     }
+
     @PostMapping("/reset-password/{token}")
     public ResponseEntity<String> resetPassword(@PathVariable String token, @RequestBody PasswordDTO passwordDTO) {
         try {
