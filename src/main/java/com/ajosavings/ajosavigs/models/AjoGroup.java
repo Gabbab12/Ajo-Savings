@@ -68,5 +68,6 @@ public class AjoGroup extends AuditBaseEntity{
             inverseJoinColumns = @JoinColumn(name = "user_id"))
     private Set<Users> users = new HashSet<>();
 
+    private boolean isEnabled;
 }
 
