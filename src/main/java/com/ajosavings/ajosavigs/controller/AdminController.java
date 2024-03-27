@@ -150,13 +150,13 @@ public class AdminController {
     }
 
     @PostMapping("/{ajoGroupId}/disable")
-    public ResponseEntity<String> disableAjoGroup(@PathVariable Long ajoGroupId) {
+    public ResponseEntity<AjoGroup> disableAjoGroup(@PathVariable Long ajoGroupId) {
         try {
-            ajoGroupService.disableAjoGroup(ajoGroupId);
-            return ResponseEntity.ok("AjoGroup with ID " + ajoGroupId + " disabled successfully.");
-        } catch (Exception e) {
-            log.error("Failed to disable AjoGroup: AjoGroup with ID " + ajoGroupId + " does not exist", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to disable AjoGroup: AjoGroup with ID " + ajoGroupId + " does not exist");
+            return ajoGroupService.disableAjoGroup(ajoGroupId);
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
         }
     }
 

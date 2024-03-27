@@ -56,6 +56,7 @@ public interface AjoGroupService {
 
     ResponseEntity<AjoGroup> enableAjoGroup(Long ajoGroupId);
 
+
     ResponseEntity<AjoGroup> disableAjoGroup(Long ajoGroupId);
 }
 

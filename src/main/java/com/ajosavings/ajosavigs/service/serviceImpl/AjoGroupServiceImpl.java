@@ -514,6 +514,7 @@ public class AjoGroupServiceImpl implements AjoGroupService {
             throw new AccessDeniedException("Only admin users can disable Ajo groups", HttpStatus.FORBIDDEN);
         }
 
+
         ajoGroup.setEnabled(false);
         ajoGroupRepository.save(ajoGroup);
 
