@@ -17,7 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public interface UsersService {
     ResponseEntity<Users> signUp(SignUpRequest signUpRequest);
-    PasswordToken forgotPassword(String email) throws MessagingException;
+    ResponseEntity<PasswordToken> forgotPassword(String email) throws MessagingException;
     boolean verifyPasswordToken(String token);
     @Transactional
     ResponseEntity<String> resetPassword(String token, PasswordDTO passwordDTO) throws ResourceNotFoundException;
