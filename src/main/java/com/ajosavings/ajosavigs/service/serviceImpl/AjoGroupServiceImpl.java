@@ -2,6 +2,8 @@ package com.ajosavings.ajosavigs.service.serviceImpl;
 
 import com.ajosavings.ajosavigs.dto.request.AjoGroupDTO;
 import com.ajosavings.ajosavigs.dto.request.ContributionFlowDto;
+import com.ajosavings.ajosavigs.dto.response.GroupTransactionPage;
+import com.ajosavings.ajosavigs.dto.response.SavingsPage;
 import com.ajosavings.ajosavigs.enums.*;
 import com.ajosavings.ajosavigs.exception.*;
 import com.ajosavings.ajosavigs.models.*;
@@ -412,18 +414,30 @@ public class AjoGroupServiceImpl implements AjoGroupService {
     }
 
     @Override
-    public Page<GroupTransactionHistory> getGroupTransactionHistory(Long groupId, Authentication authentication, Pageable pageable) {
+    public GroupTransactionPage getGroupTransactionHistory(Long groupId, Authentication authentication, Pageable pageable) {
         Optional<AjoGroup> optionalAjoGroup = ajoGroupRepository.findById(groupId);
+
         if (optionalAjoGroup.isEmpty()) {
             throw new ResourceNotFoundException("AjoGroup with id " + groupId + " does not exist");
         }
+
         AjoGroup ajoGroup = optionalAjoGroup.get();
         Users currentUser = (Users) authentication.getPrincipal();
 
         if (!ajoGroup.getUsers().contains(currentUser)) {
             throw new AccessDeniedException("You are not a member of this Ajo Group", HttpStatus.FORBIDDEN);
         }
-        return groupTransactionHistoryRepo.findByAjoGroupId(groupId, pageable);
+
+        Page<GroupTransactionHistory> groupSavings = groupTransactionHistoryRepo.findByAjoGroupId(groupId, pageable);
+
+        return GroupTransactionPage.builder()
+                .content(groupSavings.getContent())
+                .pageNo(groupSavings.getNumber())
+                .pageSize(groupSavings.getSize())
+                .totalElements(groupSavings.getTotalElements())
+                .totalPages(groupSavings.getTotalPages())
+                .last(groupSavings.isLast())
+                .build();
     }
 
     @Override
