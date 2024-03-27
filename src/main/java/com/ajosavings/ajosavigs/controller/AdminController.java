@@ -147,6 +147,11 @@ public class AdminController {
         return ajoGroupService.enableAjoGroup(ajoGroupId);
     }
 
+    @PutMapping("/disable/{ajoGroupId}")
+    public ResponseEntity<AjoGroup> disableAjoGroup(@PathVariable Long ajoGroupId) {
+        return ajoGroupService.disableAjoGroup(ajoGroupId);
+    }
+
 
 }
 
