@@ -2,6 +2,7 @@ package com.ajosavings.ajosavigs.controller;
 
 import com.ajosavings.ajosavigs.dto.request.AjoGroupDTO;
 import com.ajosavings.ajosavigs.dto.request.ContributionFlowDto;
+import com.ajosavings.ajosavigs.dto.response.GroupTransactionPage;
 import com.ajosavings.ajosavigs.enums.Role;
 import com.ajosavings.ajosavigs.exception.AccessDeniedException;
 import com.ajosavings.ajosavigs.exception.ResourceNotFoundException;
@@ -87,12 +88,11 @@ public class AjoGroupController {
     }
 
     @GetMapping("/get-group-transaction/{groupId}")
-    public ResponseEntity<Page<GroupTransactionHistory>> getGroupTransactionHistory(@PathVariable Long groupId, Authentication authentication,
-                                                                                    @PageableDefault(size = 10, page = 0) Pageable pageable) {
-        Page<GroupTransactionHistory> transactionHistoryPage = ajoGroupService.getGroupTransactionHistory(groupId, authentication, pageable);
+    public ResponseEntity<GroupTransactionPage> getGroupTransactionHistory(@PathVariable Long groupId, Authentication authentication,
+                                                                           @PageableDefault(size = 10, page = 0) Pageable pageable) {
+        GroupTransactionPage transactionHistoryPage = ajoGroupService.getGroupTransactionHistory(groupId, authentication, pageable);
         return ResponseEntity.ok(transactionHistoryPage);
     }
-
 
     @PutMapping("/update-group/{ajoGroupId}")
     public ResponseEntity<AjoGroup> editAjoGroup(@PathVariable Long ajoGroupId, @RequestBody AjoGroupDTO updatedAjoGroupDTO){

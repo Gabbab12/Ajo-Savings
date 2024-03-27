@@ -34,7 +34,7 @@ import java.time.LocalDateTime;
             return ResponseEntity.ok("signup successful, please proceed to your email for the verification of your account");
         } catch (UserAlreadyExistException e) {
             log.info(e.getMessage());
-            return ResponseEntity.status(200).body("Error sending message during signup: " + e.getMessage());
+            return ResponseEntity.status(500).body("Error during signup");
         }
     }
 

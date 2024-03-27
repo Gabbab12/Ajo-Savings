@@ -2,6 +2,7 @@ package com.ajosavings.ajosavigs.service;
 
 import com.ajosavings.ajosavigs.dto.request.AjoGroupDTO;
 import com.ajosavings.ajosavigs.dto.request.ContributionFlowDto;
+import com.ajosavings.ajosavigs.dto.response.GroupTransactionPage;
 import com.ajosavings.ajosavigs.models.AjoGroup;
 import com.ajosavings.ajosavigs.models.GroupTransactionHistory;
 import com.ajosavings.ajosavigs.models.Users;
@@ -42,7 +43,7 @@ public interface AjoGroupService {
 
     ResponseEntity<Long> getNewAjoGroups(Authentication authentication);
 
-    Page<GroupTransactionHistory> getGroupTransactionHistory(Long groupId, Authentication authentication, Pageable pageable);
+    GroupTransactionPage getGroupTransactionHistory(Long groupId, Authentication authentication, Pageable pageable);
 
     Page<GroupTransactionHistory> getGroupReceivedTransactions(Long groupId, Pageable pageable);
 

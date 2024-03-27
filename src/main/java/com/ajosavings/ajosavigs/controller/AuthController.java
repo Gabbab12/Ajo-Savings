@@ -43,6 +43,7 @@ public class AuthController {
             throw new BadRequestException("Invalid OTP", HttpStatus.BAD_REQUEST);
         }
     }
+
     @PostMapping("/reset-password/{token}")
     public ResponseEntity<String> resetPassword(@PathVariable String token, @RequestBody PasswordDTO passwordDTO) {
             return usersService.resetPassword(token, passwordDTO);
