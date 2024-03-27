@@ -39,7 +39,6 @@ public class AjoGroupServiceImpl implements AjoGroupService {
     private final TransactionHistoryRepository transactionHistoryRepository;
     private final EntityManager entityManager;
     private final GroupTransactionHistoryRepo groupTransactionHistoryRepo;
-    private final UserRepository usersRepository;
     private final DefaultedUsersRepository defaultedUsersRepository;
 
 
@@ -199,11 +198,10 @@ public class AjoGroupServiceImpl implements AjoGroupService {
     public void recordGroupTransactionHistory(Users user, AjoGroup ajoGroup, BigDecimal contributionAmount, GroupTransactionStatus status) {
         GroupTransactionHistory groupTransactionHistory = new GroupTransactionHistory();
         groupTransactionHistory.setSlot(user.getAjoSlot());
-        groupTransactionHistory.setUserId(String.format("USR%06d", user.getId()));
         groupTransactionHistory.setStatus(status);
         groupTransactionHistory.setContributionAmount(contributionAmount);
-        groupTransactionHistory.setName(user.getFirstName() + " " + user.getLastName());
         groupTransactionHistory.setAjoGroup(ajoGroup);
+        groupTransactionHistory.setUser(user);
         groupTransactionHistoryRepo.save(groupTransactionHistory);
     }
 
