@@ -12,7 +12,6 @@ import com.ajosavings.ajosavigs.service.AjoGroupService;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.velocity.exception.ResourceNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -41,7 +40,6 @@ public class AjoGroupServiceImpl implements AjoGroupService {
     private final TransactionHistoryRepository transactionHistoryRepository;
     private final EntityManager entityManager;
     private final GroupTransactionHistoryRepo groupTransactionHistoryRepo;
-    private final UserRepository usersRepository;
     private final DefaultedUsersRepository defaultedUsersRepository;
 
 
@@ -131,7 +129,7 @@ public class AjoGroupServiceImpl implements AjoGroupService {
         Optional<AjoGroup> optionalAjoGroup = ajoGroupRepository.findById(groupId);
 
         if (optionalAjoGroup.isEmpty()) {
-            throw new ResourceNotFoundException("AjoGroup not found with id: " + groupId);
+            throw new ResourceNotFoundException("AjoGroup not found with id: " + groupId, HttpStatus.NOT_FOUND);
         }
         AjoGroup ajoGroup = optionalAjoGroup.get();
 
@@ -176,7 +174,7 @@ public class AjoGroupServiceImpl implements AjoGroupService {
         Users users = (Users) authentication.getPrincipal();
 
         AjoGroup ajoGroup = ajoGroupRepository.findById(ajoGroupId).orElseThrow(() ->
-                new ResourceNotFoundException("AjoGroup with id " + ajoGroupId + " does not exist"));
+                new ResourceNotFoundException("AjoGroup with id " + ajoGroupId + " does not exist", HttpStatus.NOT_FOUND));
 
         if (!ajoGroup.getUsers().contains(users)) {
             throw new AccessDeniedException("You are not a member of this Ajo Group", HttpStatus.NOT_ACCEPTABLE);
@@ -201,11 +199,10 @@ public class AjoGroupServiceImpl implements AjoGroupService {
     public void recordGroupTransactionHistory(Users user, AjoGroup ajoGroup, BigDecimal contributionAmount, GroupTransactionStatus status) {
         GroupTransactionHistory groupTransactionHistory = new GroupTransactionHistory();
         groupTransactionHistory.setSlot(user.getAjoSlot());
-        groupTransactionHistory.setUserId(String.format("USR%06d", user.getId()));
         groupTransactionHistory.setStatus(status);
         groupTransactionHistory.setContributionAmount(contributionAmount);
-        groupTransactionHistory.setName(user.getFirstName() + " " + user.getLastName());
         groupTransactionHistory.setAjoGroup(ajoGroup);
+        groupTransactionHistory.setUser(user);
         groupTransactionHistoryRepo.save(groupTransactionHistory);
     }
 
@@ -418,7 +415,7 @@ public class AjoGroupServiceImpl implements AjoGroupService {
         Optional<AjoGroup> optionalAjoGroup = ajoGroupRepository.findById(groupId);
 
         if (optionalAjoGroup.isEmpty()) {
-            throw new ResourceNotFoundException("AjoGroup with id " + groupId + " does not exist");
+            throw new ResourceNotFoundException("AjoGroup with id " + groupId + " does not exist", HttpStatus.NOT_FOUND);
         }
 
         AjoGroup ajoGroup = optionalAjoGroup.get();
@@ -443,13 +440,13 @@ public class AjoGroupServiceImpl implements AjoGroupService {
     @Override
     public Page<GroupTransactionHistory> getGroupReceivedTransactions(Long groupId, Pageable pageable) {
         AjoGroup ajoGroup = ajoGroupRepository.findById(groupId)
-                .orElseThrow(() -> new ResourceNotFoundException("AjoGroup with id " + groupId + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("AjoGroup with id " + groupId + " not found", HttpStatus.NOT_FOUND));
         return groupTransactionHistoryRepo.findByAjoGroupAndStatus(ajoGroup, GroupTransactionStatus.RECEIVE, pageable);
     }
     @Override
     public Page<GroupTransactionHistory> getGroupSentTransactions(Long groupId, Pageable pageable) {
         AjoGroup ajoGroup = ajoGroupRepository.findById(groupId)
-                .orElseThrow(() -> new ResourceNotFoundException("AjoGroup with id " + groupId + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("AjoGroup with id " + groupId + " not found", HttpStatus.NOT_FOUND));
         return groupTransactionHistoryRepo.findByAjoGroupAndStatus(ajoGroup, GroupTransactionStatus.SENT, pageable);
     }
     @Override
@@ -492,7 +489,7 @@ public class AjoGroupServiceImpl implements AjoGroupService {
     public ResponseEntity<AjoGroup> enableAjoGroup(Long ajoGroupId) {
         Optional<AjoGroup> optionalAjoGroup = ajoGroupRepository.findById(ajoGroupId);
         if (optionalAjoGroup.isEmpty()) {
-            throw new ResourceNotFoundException("AjoGroup with id " + ajoGroupId + " does not exist");
+            throw new ResourceNotFoundException("AjoGroup with id " + ajoGroupId + " does not exist", HttpStatus.NOT_FOUND);
         }
         AjoGroup ajoGroup = optionalAjoGroup.get();
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

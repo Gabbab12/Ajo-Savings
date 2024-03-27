@@ -5,6 +5,7 @@ import com.ajosavings.ajosavigs.dto.request.PasswordChangeDTO;
 import com.ajosavings.ajosavigs.dto.request.PasswordDTO;
 import com.ajosavings.ajosavigs.dto.request.ProfileUpdateDto;
 import com.ajosavings.ajosavigs.dto.response.AuthenticationResponse;
+import com.ajosavings.ajosavigs.exception.BadRequestException;
 import com.ajosavings.ajosavigs.exception.ResourceNotFoundException;
 import com.ajosavings.ajosavigs.exception.UserNotFoundException;
 import com.ajosavings.ajosavigs.models.PasswordToken;
@@ -30,35 +31,22 @@ public class AuthController {
     private final UsersService usersService;
 
     @PostMapping("/forgot")
-    public ResponseEntity<String> forgotPassword(@RequestParam String username) {
-        try {
-            PasswordToken passwordToken = usersService.forgotPassword(username);
-            return ResponseEntity.ok("Password reset email sent successfully. Token: " + passwordToken.getToken());
-        } catch (UserNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found: " + e.getMessage());
-        } catch (MessagingException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error sending reset email: " + e.getMessage());
-        }
+    public ResponseEntity<PasswordToken> forgotPassword(@RequestParam String username) throws MessagingException {
+       return usersService.forgotPassword(username);
     }
 
     @GetMapping("/verify/{token}")
     public ResponseEntity<?> verifyPasswordToken(@PathVariable String token) {
         if (usersService.verifyPasswordToken(token)) {
-            return ResponseEntity.ok("Password token is valid.");
+            return ResponseEntity.ok("You can proceed to resetting your email");
         } else {
-            return ResponseEntity.badRequest().body("Password token is invalid or expired.");
+            throw new BadRequestException("Invalid OTP", HttpStatus.BAD_REQUEST);
         }
     }
 
     @PostMapping("/reset-password/{token}")
     public ResponseEntity<String> resetPassword(@PathVariable String token, @RequestBody PasswordDTO passwordDTO) {
-        try {
             return usersService.resetPassword(token, passwordDTO);
-        } catch (ResourceNotFoundException e) {
-            return new ResponseEntity<>("token not found or has expired or the token is invalid", HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            return new ResponseEntity<>("An unexpected error occurred", HttpStatus.INTERNAL_SERVER_ERROR);
-        }
     }
 
     @PreAuthorize("isAuthenticated()")

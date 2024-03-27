@@ -22,26 +22,7 @@ import org.thymeleaf.context.Context;
 public class EmailServiceImpl implements EmailService {
 
     private final JavaMailSender javaMailSender;
-    private final TemplateEngine templateEngine;
 
-    public static final String FORGOT_PASSWORD_SUBJECT = "Forgot Password";
-    public static final String HTML_CONTEXT = "<p>Dear user, you have requested to reset your password.</p>\n" +
-            "\n" +
-            "<p>Please click <a href='https://localhost:3000/forgotpassword' + ${passwordToken}>here</a> to reset your password</p>\n" +
-            "\n" +
-            "<p>If you did not request for this, please ignore this email.</p>";
-
-
-    public void sendForgotPasswordEmail(String username, PasswordToken passwordToken) throws MessagingException {
-        if (username == null) {
-            // Throw a more descriptive exception for user not found
-            throw new UserNotFoundException("Username cannot be null when sending forgot password email.", HttpStatus.NOT_FOUND);
-        }
-        Context context = new Context();
-        context.setVariable("passwordToken", passwordToken.getToken());
-//        String htmlContent = templateEngine.process("template/PasswordToken.html", context);
-        sendHTMLEmail(username, FORGOT_PASSWORD_SUBJECT, HTML_CONTEXT);
-    }
     @Override
     @Async
     public void sendEmail(String toEmail, String subject, String content) {
@@ -65,6 +46,10 @@ public class EmailServiceImpl implements EmailService {
         helper.setTo(toEmail);
         helper.setSubject(subject);
         helper.setText(htmlContent, true);
-        javaMailSender.send(mimeMessage);
+        try{
+            javaMailSender.send(mimeMessage);
+        }catch (Exception exe){
+            log.info("Error while sending email");
+        }
     }
 }

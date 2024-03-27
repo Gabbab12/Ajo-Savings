@@ -105,7 +105,7 @@ public class UsersServiceImpl implements UsersService {
     }
 
     @Override
-    public PasswordToken forgotPassword(String username) throws MessagingException {
+    public ResponseEntity<PasswordToken> forgotPassword(String username) throws MessagingException {
         Optional<Users> user = userRepository.findUsersByUsername(username);
 
         if (user.isEmpty()) {
@@ -113,12 +113,19 @@ public class UsersServiceImpl implements UsersService {
         }
 
         PasswordToken passwordToken = new PasswordToken();
-        passwordToken.setToken(generatePasswordToken());
+        passwordToken.setToken(generateOtpToken());
         passwordToken.setUsername(user.get().getUsername());
         passwordToken.setUser(user.get());
         PasswordToken passwordToken1 = passwordTokenRepository.save(passwordToken);
-        emailService.sendForgotPasswordEmail(user.get().getUsername(), passwordToken);
-        return passwordToken1;
+
+        String content = "Dear user, \n"
+                + "Find below the one time password to reset your password as requested \n"
+                + passwordToken.getToken() + "\n" +
+                "\n" + "Please ignore this message if you did not requested for this. \n";
+
+        emailService.sendHTMLEmail(user.get().getUsername(), "RESET PASSWORD", content);
+
+        return ResponseEntity.status(HttpStatus.OK).body(passwordToken1);
     }
 
     @Override
@@ -130,10 +137,9 @@ public class UsersServiceImpl implements UsersService {
         }
         if (passwordToken.getExpirationTime().isAfter(LocalDateTime.now())) {
             try {
-                passwordToken.setIsValid(false);
                 passwordTokenRepository.save(passwordToken);
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                throw new BadRequestException("Invalid OTP number", HttpStatus.BAD_REQUEST);
             }
         }
         return true;
@@ -160,7 +166,6 @@ public class UsersServiceImpl implements UsersService {
             user.setPassword(new BCryptPasswordEncoder().encode(passwordDTO.getPassword()));
             userRepository.save(user);
 
-            // set the token isvalid to false after use
             passwordToken.setIsValid(false);
             passwordTokenRepository.save(passwordToken);
         }
