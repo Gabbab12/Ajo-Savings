@@ -149,19 +149,15 @@ public class AdminController {
         return ajoGroupService.enableAjoGroup(ajoGroupId);
     }
 
-    @PostMapping("/{ajoGroupId}/disable")
+    @PutMapping("/disable/{ajoGroupId}")
     public ResponseEntity<AjoGroup> disableAjoGroup(@PathVariable Long ajoGroupId) {
-        try {
-            return ajoGroupService.disableAjoGroup(ajoGroupId);
-        } catch (ResourceNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        } catch (AccessDeniedException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
-        }
+        return ajoGroupService.disableAjoGroup(ajoGroupId);
     }
 
-
 }
+
+
+
 
 
 
