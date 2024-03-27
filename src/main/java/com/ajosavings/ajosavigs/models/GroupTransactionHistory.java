@@ -23,4 +23,6 @@ public class GroupTransactionHistory extends AuditBaseEntity{
     private BigDecimal contributionAmount;
     @ManyToOne
     private AjoGroup ajoGroup;
+    @ManyToOne
+    private Users user;
 }

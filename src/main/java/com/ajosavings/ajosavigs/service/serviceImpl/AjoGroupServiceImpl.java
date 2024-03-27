@@ -39,7 +39,6 @@ public class AjoGroupServiceImpl implements AjoGroupService {
     private final TransactionHistoryRepository transactionHistoryRepository;
     private final EntityManager entityManager;
     private final GroupTransactionHistoryRepo groupTransactionHistoryRepo;
-    private final UserRepository usersRepository;
     private final DefaultedUsersRepository defaultedUsersRepository;
 
 
@@ -204,6 +203,7 @@ public class AjoGroupServiceImpl implements AjoGroupService {
         groupTransactionHistory.setContributionAmount(contributionAmount);
         groupTransactionHistory.setName(user.getFirstName() + " " + user.getLastName());
         groupTransactionHistory.setAjoGroup(ajoGroup);
+        groupTransactionHistory.setUser(user);
         groupTransactionHistoryRepo.save(groupTransactionHistory);
     }
 
