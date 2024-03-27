@@ -1,6 +1,8 @@
 package com.ajosavings.ajosavigs.controller;
 
+import com.ajosavings.ajosavigs.exception.AccessDeniedException;
 import com.ajosavings.ajosavigs.exception.BadRequestException;
+import com.ajosavings.ajosavigs.exception.ResourceNotFoundException;
 import com.ajosavings.ajosavigs.models.AjoGroup;
 import com.ajosavings.ajosavigs.models.DefaultedUsers;
 import com.ajosavings.ajosavigs.models.GroupTransactionHistory;
@@ -147,8 +149,21 @@ public class AdminController {
         return ajoGroupService.enableAjoGroup(ajoGroupId);
     }
 
+    @PostMapping("/{ajoGroupId}/disable")
+    public ResponseEntity<String> disableAjoGroup(@PathVariable Long ajoGroupId) {
+        try {
+            ajoGroupService.disableAjoGroup(ajoGroupId);
+            return ResponseEntity.ok("AjoGroup with ID " + ajoGroupId + " disabled successfully.");
+        } catch (Exception e) {
+            log.error("Failed to disable AjoGroup: AjoGroup with ID " + ajoGroupId + " does not exist", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to disable AjoGroup: AjoGroup with ID " + ajoGroupId + " does not exist");
+        }
+    }
+
 
 }
+
+
 
 
 

@@ -196,6 +196,7 @@ public class AjoGroupServiceImpl implements AjoGroupService {
 
         return ResponseEntity.status(HttpStatus.OK).body(ajoGroup);
     }
+
     public void recordGroupTransactionHistory(Users user, AjoGroup ajoGroup, BigDecimal contributionAmount, GroupTransactionStatus status) {
         GroupTransactionHistory groupTransactionHistory = new GroupTransactionHistory();
         groupTransactionHistory.setSlot(user.getAjoSlot());
@@ -216,6 +217,7 @@ public class AjoGroupServiceImpl implements AjoGroupService {
         transactionHistory.setDate(LocalDate.now());
         transactionHistoryRepository.save(transactionHistory);
     }
+
     @Override
     @Scheduled(cron = "0 0 0 * * *") // Run every day at midnight
     @Transactional
@@ -432,18 +434,20 @@ public class AjoGroupServiceImpl implements AjoGroupService {
                 .orElseThrow(() -> new ResourceNotFoundException("AjoGroup with id " + groupId + " not found"));
         return groupTransactionHistoryRepo.findByAjoGroupAndStatus(ajoGroup, GroupTransactionStatus.RECEIVE, pageable);
     }
+
     @Override
     public Page<GroupTransactionHistory> getGroupSentTransactions(Long groupId, Pageable pageable) {
         AjoGroup ajoGroup = ajoGroupRepository.findById(groupId)
                 .orElseThrow(() -> new ResourceNotFoundException("AjoGroup with id " + groupId + " not found"));
         return groupTransactionHistoryRepo.findByAjoGroupAndStatus(ajoGroup, GroupTransactionStatus.SENT, pageable);
     }
+
     @Override
     @Transactional
     public ResponseEntity<AjoGroup> updateAjoGroup(Long ajoGroupId, AjoGroupDTO updatedAjoGroupDTO) {
 
         AjoGroup existingAjoGroup = ajoGroupRepository.findById(ajoGroupId)
-                .orElseThrow(() -> new BadRequestException("AjoGroup not found with id",HttpStatus.BAD_REQUEST));
+                .orElseThrow(() -> new BadRequestException("AjoGroup not found with id", HttpStatus.BAD_REQUEST));
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Users currentUser = (Users) authentication.getPrincipal();
@@ -460,13 +464,13 @@ public class AjoGroupServiceImpl implements AjoGroupService {
     public ResponseEntity<Void> deleteAjoGroup(Long ajoGroupId) {
 
         AjoGroup ajoGroup = ajoGroupRepository.findById(ajoGroupId)
-                .orElseThrow(() -> new NotFoundException("AjoGroup not found with id",HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new NotFoundException("AjoGroup not found with id", HttpStatus.NOT_FOUND));
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Users currentUser = (Users) authentication.getPrincipal();
 
         if (!currentUser.getRole().equals(Role.ADMIN)) {
-            throw new ForbiddenException("Only admin users can delete AjoGroups",HttpStatus.FORBIDDEN);
+            throw new ForbiddenException("Only admin users can delete AjoGroups", HttpStatus.FORBIDDEN);
         }
 
         ajoGroupRepository.deleteById(ajoGroup.getId());
@@ -497,4 +501,23 @@ public class AjoGroupServiceImpl implements AjoGroupService {
                 authentication.getAuthorities().stream()
                         .anyMatch(a -> a.getAuthority().equals("ADMIN"));
     }
+
+    @Override
+    public ResponseEntity<AjoGroup> disableAjoGroup(Long ajoGroupId) {
+        Optional<AjoGroup> optionalAjoGroup = ajoGroupRepository.findById(ajoGroupId);
+        if (optionalAjoGroup.isEmpty()) {
+            throw new ResourceNotFoundException("AjoGroup with id " + ajoGroupId + " does not exist");
+        }
+        AjoGroup ajoGroup = optionalAjoGroup.get();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (!isAdmin(authentication)) {
+            throw new AccessDeniedException("Only admin users can disable Ajo groups", HttpStatus.FORBIDDEN);
+        }
+
+        ajoGroup.setEnabled(false);
+        ajoGroupRepository.save(ajoGroup);
+
+        return ResponseEntity.ok(ajoGroup);
+    }
+
 }
